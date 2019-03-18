@@ -2,10 +2,11 @@ package data
 
 import (
 	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
-	"strings"
+	// "sort"
+	// "strings"
 	"sync"
 )
 
@@ -16,30 +17,61 @@ type PeerList struct {
 	mux sync.Mutex
 }
 
-func NewPeerList(id int32, maxLength int32) PeerList {}
+func NewPeerList(id int32, maxLength int32) PeerList {
+	/* Create new peer map */
+	peerList := PeerList{}
+	peerList.selfId = id
+	peerList.peerMap = make(map[string]int32)
+	peerList.maxLength = maxLength
+	return peerList
+}
 
-func(peers *PeerList) Add(addr string, id int32) {}
+func(peers *PeerList) Add(addr string, id int32) {
+	peers.peerMap[addr] = id
+}
 
-func(peers *PeerList) Delete(addr string) {}
+func(peers *PeerList) Delete(addr string) {
+	delete(peers.peerMap, addr)
+}
 
-func(peers *PeerList) Rebalance() {}
+func(peers *PeerList) Rebalance() {
 
-func(peers *PeerList) Show() string {}
+}
+
+func(peers *PeerList) Show() string {
+	show := "Show"
+	fmt.Println(show)
+	return show
+}
 
 func(peers *PeerList) Register(id int32) {
 	peers.selfId = id
 	fmt.Printf("SelfId=%v\n", id)
 }
 
-func(peers *PeerList) Copy() map[string]int32 {}
+/* Return copy of peer list presumably */
+func(peers *PeerList) Copy() map[string]int32 {
+	newMap := make(map[string]int32)
+	for k,v := range peers.peerMap {
+		newMap[k] = v
+	}
+	return newMap
+}
 
 func(peers *PeerList) GetSelfId() int32 {
 	return peers.selfId
 }
 
-func(peers *PeerList) PeerMapToJson() (string, error) {}
+/* TODO: Fix error checking */
+func(peers *PeerList) PeerMapToJson() (string, error) {
+	jsonPeerMap, err := json.Marshal(peers.peerMap)
+	return string(jsonPeerMap), err
+}
 
-func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) {}
+/* Looks like this will take peerMap as json String and add it to existing peer map */
+func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) {
+
+}
 
 func TestPeerListRebalance() {
 	peers := NewPeerList(5, 4)

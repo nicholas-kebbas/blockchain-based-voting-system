@@ -7,6 +7,13 @@ type RegisterData struct {
 	PeerMapJson string `json:"peerMapJson"`
 }
 
-func NewRegisterData(id int32, peerMapJson string) RegisterData {}
+func NewRegisterData(id int32, peerMapJson string) RegisterData {
+	newRegisterData := RegisterData{id, peerMapJson}
+	return newRegisterData
+}
 
-func (data *RegisterData) EncodeToJson() (string, error) {}
+/* TODO: Check this for correctness */
+func (data *RegisterData) EncodeToJson() (string, error) {
+	jsonString, err := json.Marshal(data)
+	return string(jsonString), err
+}

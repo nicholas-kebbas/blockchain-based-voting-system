@@ -1,7 +1,8 @@
 package data
 
 import (
-	"../../p1"
+	 // "../../p1"
+	 // "../../p2"
 )
 
 type HeartBeatData struct {
@@ -13,6 +14,10 @@ type HeartBeatData struct {
 	Hops        int32  `json:"hops"`
 }
 
-func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson string, addr string) HeartBeatData {}
+func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson string, addr string) HeartBeatData {
 
-func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapBase64 string, addr string) HeartBeatData {}
+}
+
+func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapBase64 string, addr string) HeartBeatData {
+
+}
