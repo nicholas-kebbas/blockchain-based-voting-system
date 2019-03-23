@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"github.com/nicholas-kebbas/project2PrivateBlockchain/p2"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 )
 
 func TestBlockChainBasic(t *testing.T) {

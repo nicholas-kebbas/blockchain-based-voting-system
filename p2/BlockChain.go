@@ -39,6 +39,19 @@ func (blockchain *BlockChain) Get(height int32) []Block {
 	return nil
 }
 
+/* Check if hash exists in blockchain */
+func (blockchain *BlockChain) CheckForHash(hash string) bool {
+	var i int32 = 0
+	for i = 0; i < blockchain.Length; i++ {
+		for z := 0; z < len(blockchain.Get(i)); z++ {
+			if blockchain.Get(i)[z].Header.Hash == hash {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 
 /* Insert into the chain. mapping the height to the block itself */
 /*  If the list has already contained that block's hash, ignore it because we don't store duplicate blocks;

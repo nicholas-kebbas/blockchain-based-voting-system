@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/nicholas-kebbas/project2PrivateBlockchain/p1"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"golang.org/x/crypto/sha3"
 )
 

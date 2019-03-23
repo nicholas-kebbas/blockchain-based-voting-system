@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/nicholas-kebbas/project2PrivateBlockchain/p1"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"fmt"
 	"io/ioutil"
 	"testing"

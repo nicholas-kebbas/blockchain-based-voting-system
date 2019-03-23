@@ -43,11 +43,12 @@ func(sbc *SyncBlockChain) Insert(block p2.Block) {
 	sbc.mux.Unlock()
 }
 
+/* Check if this block is found in the chain */
 func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
-	if insertBlock.Header.ParentHash == "" {
-		return false
+	if sbc.bc.CheckForHash(insertBlock.Header.ParentHash) {
+		return true
 	}
-	return true
+	return false
 }
 
 func(sbc *SyncBlockChain) UpdateEntireBlockChain(blockChainJson string) {
@@ -62,7 +63,10 @@ func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 
 /* TODO: Generate Block only having the MPT. Temp code in there now */
 func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
-	return sbc.bc.Get(0)[0]
+	height := sbc.bc.Length
+	latestBlock := sbc.bc.Get(height)[0]
+	newBlock := p2.Initial(height, 123, latestBlock.Header.Hash, mpt)
+	return newBlock
 }
 
 func(sbc *SyncBlockChain) Show() string {
