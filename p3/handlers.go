@@ -1,20 +1,20 @@
 package p3
 
 import (
-	"../p2"
+	//"../p2"
 	"./data"
-	"encoding/json"
-	"errors"
+	//"encoding/json"
+	// "errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"io"
-	"io/ioutil"
-	"math/rand"
+	//"github.com/gorilla/mux"
+	//"io"
+	//"io/ioutil"
+	//"math/rand"
 	"net/http"
-	"os"
-	"strconv"
-	"strings"
-	"time"
+	//"os"
+	//"strconv"
+	//"strings"
+	//"time"
 )
 
 var TA_SERVER = "http://localhost:6688"
@@ -49,7 +49,7 @@ func Download() {}
 func Upload(w http.ResponseWriter, r *http.Request) {
 	blockChainJson, err := SBC.BlockChainToJson()
 	if err != nil {
-		data.PrintError(err, "Upload")
+		// data.PrintError(err, "Upload")
 	}
 	fmt.Fprint(w, blockChainJson)
 }

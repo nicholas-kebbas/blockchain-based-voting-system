@@ -1,0 +1,4 @@
+Hash0: Ext<[6, 1, 6], value="Hash1">
+Hash1: Branch[0="", 1="Hash3", 2="Hash2", 3="", 4="", 5="", 6="", 7="", 8="", 9="", 10="", 11="", 12="", 13="", 14="", 15="", value=]
+Hash2: Leaf<[6, 2], value="banana">
+Hash3: Leaf<[], value="apple">

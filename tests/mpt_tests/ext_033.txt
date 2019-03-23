@@ -1,0 +1,8 @@
+Hash0: Branch[0="", 1="", 2="", 3="", 4="", 5="", 6="Hash2", 7="Hash1", 8="", 9="", 10="", 11="", 12="", 13="", 14="", 15="", value=]
+Hash1: Leaf<[0], value="apple">
+Hash2: Branch[0="", 1="Hash4", 2="Hash3", 3="", 4="", 5="", 6="", 7="", 8="", 9="", 10="", 11="", 12="", 13="", 14="", 15="", value=]
+Hash3: Leaf<[6, 1], value="new">
+Hash4: Ext<[6, 1], value="Hash5">
+Hash5: Branch[0="", 1="", 2="", 3="", 4="", 5="", 6="Hash7", 7="Hash6", 8="", 9="", 10="", 11="", 12="", 13="", 14="", 15="", value=]
+Hash6: Leaf<[0], value="orange">
+Hash7: Leaf<[1], value="banana">

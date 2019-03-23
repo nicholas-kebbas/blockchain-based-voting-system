@@ -2,9 +2,10 @@ package data
 
 import (
 	"encoding/json"
-	// "encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
+
 	// "sort"
 	// "strings"
 	"sync"
@@ -16,6 +17,8 @@ type PeerList struct {
 	maxLength int32
 	mux sync.Mutex
 }
+
+type byValue []int32
 
 func NewPeerList(id int32, maxLength int32) PeerList {
 	/* Create new peer map */
@@ -33,9 +36,27 @@ func(peers *PeerList) Add(addr string, id int32) {
 func(peers *PeerList) Delete(addr string) {
 	delete(peers.peerMap, addr)
 }
-
+/* Sort all peers' Id, insert SelfId, consider the list as a cycle, and choose 16 nodes at each side of SelfId.
+For example, if SelfId is 10, PeerList is [7, 8, 9, 15, 16], then the closest 4 nodes are [8, 9, 15, 16].
+ */
 func(peers *PeerList) Rebalance() {
+	arr := []int32{}
+	for _, v := range peers.peerMap {
+		arr = append(arr, v)
+	}
+	arr = append(arr, peers.selfId)
+	sort.Sort(byValue(arr))
+	fmt.Println(arr)
+}
 
+func (s byValue) Len() int {
+	return len(s)
+}
+func (s byValue) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s byValue) Less(i, j int) bool {
+	return i < j
 }
 
 func(peers *PeerList) Show() string {

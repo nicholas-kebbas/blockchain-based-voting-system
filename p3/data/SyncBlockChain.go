@@ -1,9 +1,9 @@
 package data
 
 import (
-	"../../p1"
-	"../../p2"
 	"errors"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"sync"
 )
 
@@ -51,7 +51,7 @@ func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
 }
 
 func(sbc *SyncBlockChain) UpdateEntireBlockChain(blockChainJson string) {
-	p2.DecodeFromJSON(sbc.bc, blockChainJson)
+	// p2.DecodeFromJSON(sbc.bc, blockChainJson)
 }
 
 /* TODO: Fix error handling on this one */

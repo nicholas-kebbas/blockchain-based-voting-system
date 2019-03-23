@@ -1,0 +1,1 @@
+Hash0: Leaf<[6, 2], value="banana">
