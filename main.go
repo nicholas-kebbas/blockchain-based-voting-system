@@ -8,10 +8,15 @@ import (
 )
 
 func main() {
-	router := p3.NewRouter()
+	router1 := p3.NewRouter()
+	router2 := p3.NewRouter()
 	if len(os.Args) > 1 {
-		log.Fatal(http.ListenAndServe(":" + os.Args[1], router))
+		log.Fatal(http.ListenAndServe(":" + os.Args[1], router1))
+		log.Fatal(http.ListenAndServe(":" + os.Args[1], router2))
 	} else {
-		log.Fatal(http.ListenAndServe(":6686", router))
+		/* Launch TA Server */
+		go http.ListenAndServe(":6689", router1)
+		/* Launch My Server */
+		log.Fatal(http.ListenAndServe(":6686", router2))
 	}
 }
