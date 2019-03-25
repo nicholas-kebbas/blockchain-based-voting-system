@@ -15,8 +15,8 @@ func main() {
 		log.Fatal(http.ListenAndServe(":" + os.Args[1], router2))
 	} else {
 		/* Launch TA Server */
-		go http.ListenAndServe(":6689", router1)
+		go http.ListenAndServe(":6670", router1)
 		/* Launch My Server */
-		log.Fatal(http.ListenAndServe(":6686", router2))
+		log.Fatal(http.ListenAndServe(":6671", router2))
 	}
 }

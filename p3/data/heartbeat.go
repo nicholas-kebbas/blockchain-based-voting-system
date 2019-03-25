@@ -30,10 +30,10 @@ func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson s
 /* Create a new instance of HeartBeatData, then decide whether to create a new block and send it to other peers.
 */
 func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string, addr string) HeartBeatData {
-	heartBeatData := NewHeartBeatData(true, selfId, " ", peerMapJson, addr)
 
 	/* Randomly decide whether to create new block and send to peers. */
 	if rand2() == true {
+		heartBeatData := NewHeartBeatData(true, selfId, " ", peerMapJson, addr)
 		/* Just get the first one in that array for now since we don't know what to do w/ forks */
 		mpt := p1.MerklePatriciaTrie{}
 		mpt.Initial()
@@ -41,8 +41,11 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		newBlock := sbc.GenBlock(mpt)
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData
+	} else {
+		heartBeatData := NewHeartBeatData(false, selfId, " ", peerMapJson, addr)
+		return heartBeatData
 	}
-	return heartBeatData
+
 }
 
 func rand2() bool {

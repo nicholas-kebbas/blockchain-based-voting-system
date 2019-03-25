@@ -16,6 +16,11 @@ type PeerList struct {
 	mux sync.Mutex
 }
 
+type PeerMap struct {
+	Addr string `json:"addr"`
+	Id int32 `json:"id"`
+}
+
 type Pair struct {
 	Key string
 	Value int32
@@ -142,8 +147,17 @@ func(peers *PeerList) PeerMapToJson() (string, error) {
 	return string(jsonPeerMap), err
 }
 
-/* Looks like this will take peerMap as json String and add it to existing peer map */
+/* Take peerMap as json String insert each entry into own peer list except for selfAddr */
 func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) {
+	byteRep := []byte(peerMapJsonStr)
+	jsonRep := PeerMap{}
+	json.Unmarshal(byteRep, jsonRep)
+	err := json.Unmarshal(byteRep, &jsonRep)
+	if err != nil {
+		fmt.Println("Error")
+	}
+	fmt.Println(jsonRep)
+	//peers.Add()
 
 }
 

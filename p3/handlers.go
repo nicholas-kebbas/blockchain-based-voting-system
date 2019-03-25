@@ -4,16 +4,17 @@ import (
 	//"../p2"
 	"./data"
 	"fmt"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"io/ioutil"
+	"strconv"
+	"strings"
+	"time"
 
 	//"github.com/gorilla/mux"
 	//"io"
-	//"io/ioutil"
 	//"math/rand"
 	"net/http"
 	//"os"
-	//"strconv"
-	//"strings"
 	//"time"
 )
 
@@ -22,20 +23,23 @@ var TA_SERVER = "http://localhost:6688"
 var REGISTER_SERVER = TA_SERVER + "/peer"
 // First node will have the canonical block chain on it. It will first create the blockchain, and
 // the other nodes will listen for it.
-var FIRST_NODE = "http://localhost:6689"
+var FIRST_NODE = "http://localhost:6670"
 var BC_DOWNLOAD_SERVER = FIRST_NODE + "/upload"
-var SELF_ADDR = "http://localhost:6670"
+var SELF_ADDR = "http://localhost:6671"
 
 /* This is the canonical blockchain */
 var SBC data.SyncBlockChain
 var Peers data.PeerList
 var ifStarted bool
+var ID int32
 
 /*  // This function will be executed before everything else.
 	// So our node should launch, then immediately grab the blockchain from BC_DOWNLOAD_SERVER
-	// Start() */
+	// Start()
+*/
 func init() {
-
+	Register()
+	go StartHeartBeat()
 }
 
 // Register ID, download BlockChain, start HeartBeat
@@ -45,17 +49,16 @@ func Start(w http.ResponseWriter, r *http.Request) {
 	//	/* Report the error */
 	//	// data.PrintError(err, "Upload")
 	//}
-	/* Register ID */
-	Register()
+
 	req, _ := http.NewRequest("GET", BC_DOWNLOAD_SERVER, nil)
 	res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
-	fmt.Println(string(body))
+	fmt.Println("body", string(body))
 }
 
 // Display peerList and sbc
-func Show(w http.ResponseWriter, r *http.Request) {
+func Show (w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n%s", Peers.Show(), SBC.Show())
 }
 
@@ -66,6 +69,27 @@ func Register() {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	fmt.Println(string(body))
+	i, err := strconv.ParseInt(string(body), 10, 32)
+	if err != nil {
+		panic(err)
+	}
+	ID = int32(i)
+}
+
+/* Create the initial canonical Blockchain and add write it to the server */
+func Create (w http.ResponseWriter, r *http.Request) {
+	newBlockChain := data.NewBlockChain()
+	mpt := p1.MerklePatriciaTrie{}
+	mpt.Initial()
+	mpt.Insert("Initial", "Value")
+	newBlockChain.GenBlock(mpt)
+	fmt.Println(newBlockChain)
+	/* Set Global variable SBC to be this new blockchain */
+	SBC = newBlockChain
+	blockChainJson, _ := SBC.BlockChainToJson()
+	fmt.Println(blockChainJson)
+	/* Write this to the server */
+	w.Write([]byte(blockChainJson))
 }
 
 // Download blockchain from TA server
@@ -80,19 +104,36 @@ func Download() {
 // Upload blockchain to whoever called this method, return jsonStr
 func Upload(w http.ResponseWriter, r *http.Request) {
 	blockChainJson, err := SBC.BlockChainToJson()
-	fmt.Println(r.Header)
-	fmt.Println(r.Body)
-	fmt.Println(r.Method)
 	if err != nil {
 		// data.PrintError(err, "Upload")
 	}
-	w.Write([]byte(blockChainJson))
 	fmt.Fprint(w, blockChainJson)
 }
 
-// Upload a block to whoever called this method, return jsonStr
+//  If you have the block, return the JSON string of the specific block; if you don't have the block,
+//  return HTTP 204: StatusNoContent; if there's an error, return HTTP 500: InternalServerError.
 func UploadBlock(w http.ResponseWriter, r *http.Request) {
-	// block := SBC.
+	url := r.RequestURI
+	fmt.Println(url)
+	splitURL := strings.Split(url, "/")
+	blockHeightString := splitURL[2]
+	blockHash := splitURL[3]
+	i, err := strconv.ParseInt(blockHeightString, 10, 32)
+	if err != nil {
+		w.WriteHeader(500)
+		panic(err)
+	}
+	blockHeight := int32(i)
+
+	block, found := SBC.GetBlock(blockHeight, blockHash)
+	/* Found it so write the JSONblock to output */
+	if found == true {
+		w.WriteHeader(200)
+		fmt.Fprint(w, block.EncodeToJSON())
+	} else {
+		w.WriteHeader(204)
+	}
+
 }
 
 /*  Received a heartbeat and follow these steps:
@@ -104,7 +145,9 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 */
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
-
+	jsonPeerList, _ := Peers.PeerMapToJson()
+	data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
+	// Peers.InjectPeerMapJson()
 }
 
 // Ask another server to return a block of certain height and hash
@@ -117,5 +160,7 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 }
 
 func StartHeartBeat() {
-
+	for range time.Tick(time.Second *5){
+		fmt.Println("Foo")
+	}
 }
