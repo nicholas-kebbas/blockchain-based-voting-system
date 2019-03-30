@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"math/rand"
 )
@@ -24,13 +25,11 @@ func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson s
 		addr,
 		3}
 	return heartBeatData
-
 }
 
 /* Create a new instance of HeartBeatData, then decide whether to create a new block and send it to other peers.
 */
 func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string, addr string) HeartBeatData {
-
 	/* Randomly decide whether to create new block and send to peers. */
 	if rand2() == true {
 		heartBeatData := NewHeartBeatData(true, selfId, " ", peerMapJson, addr)
@@ -45,7 +44,11 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		heartBeatData := NewHeartBeatData(false, selfId, " ", peerMapJson, addr)
 		return heartBeatData
 	}
+}
 
+func (heartbeat *HeartBeatData) HeartBeatToJson() string {
+	jsonHeartBeat, _ := json.Marshal(heartbeat)
+	return string(jsonHeartBeat)
 }
 
 func rand2() bool {

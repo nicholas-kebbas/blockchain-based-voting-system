@@ -62,11 +62,12 @@ func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 	return jsonBlockChain,  errors.New("need to fix this error handling")
 }
 
-/* TODO: Generate Block only having the MPT. Temp code in there now */
+/* TODO: Generate Block only having the MPT. */
 func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	sbc.mux.Lock()
 	height := sbc.bc.Length
 	if height == 0 {
+		sbc.bc = p2.NewBlockChain()
 		newBlock := p2.Initial(height, 123, "Genesis", mpt)
 		sbc.bc.Insert(newBlock)
 		sbc.mux.Unlock()

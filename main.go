@@ -2,6 +2,7 @@ package main
 
 import (
 	"./p3"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,14 +10,11 @@ import (
 
 func main() {
 	router1 := p3.NewRouter()
-	router2 := p3.NewRouter()
 	if len(os.Args) > 1 {
 		log.Fatal(http.ListenAndServe(":" + os.Args[1], router1))
-		log.Fatal(http.ListenAndServe(":" + os.Args[1], router2))
+		fmt.Println("os Args > 1")
 	} else {
-		/* Launch TA Server */
-		go http.ListenAndServe(":6670", router1)
 		/* Launch My Server */
-		log.Fatal(http.ListenAndServe(":6671", router2))
+		log.Fatal(http.ListenAndServe(":6675", router1))
 	}
 }

@@ -74,23 +74,24 @@ func(peers *PeerList) Rebalance() {
 	sort.Sort(pairList)
 	fmt.Println(pairList)
 	/* Array is now sorted. Now grab 16 to the left, and 16 to the right, if array is < 32 */
-	if peers.maxLength  < 32 {
+	if peers.maxLength  < peers.maxLength {
 		/* get to the point of selfID. Keep count to see how far in we go. */
 		counter := 0
+		halfList := int(peers.maxLength/2)
 		for i := range pairList {
 			counter ++
 			/* Once we get here, count 16 back and forward */
 			if  pairList.GetValue(i) == peers.selfId {
-				if counter >= 16 {
+				if counter >= halfList {
 					/* grab everything to the right since counter > 16 and there should be enough */
-					for z := counter; z < counter+16; z++ {
+					for z := counter; z < counter+halfList; z++ {
 						newPairList = append(newPairList, pairList[z])
 					}
 					/* grab all available to the left of the counter */
 					for z := counter; z > 0; z-- {
 						newPairList = append(newPairList, pairList[z])
 					}
-					remaining := 16 - counter
+					remaining := halfList - counter
 					/* Grab the remaining from the end of the array */
 					for z := len(pairList); z > len(pairList) - remaining; z-- {
 						newPairList = append(newPairList, pairList[z])
@@ -100,10 +101,10 @@ func(peers *PeerList) Rebalance() {
 						newPairList = append(newPairList, pairList[z])
 					}
 					/* grab 16 to the left of the counter */
-					for z := counter; z > counter - 16; z-- {
+					for z := counter; z > counter - halfList; z-- {
 						newPairList  = append(newPairList, pairList[z])
 					}
-					remaining := 16 - counter
+					remaining := halfList - counter
 					/* Grab the remaining from the beginning of the array */
 					for z := 0; z > remaining; z++ {
 						newPairList = append(newPairList, pairList[z])
@@ -139,6 +140,10 @@ func(peers *PeerList) Copy() map[string]int32 {
 
 func(peers *PeerList) GetSelfId() int32 {
 	return peers.selfId
+}
+
+func (peers *PeerList) GetPeerMap() map[string]int32 {
+	return peers.peerMap
 }
 
 /* TODO: Fix error checking */

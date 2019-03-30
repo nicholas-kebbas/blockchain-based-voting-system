@@ -20,7 +20,7 @@ var routes = Routes{
 	},
 	Route{
 		"Upload",
-		"GET",
+		"POST",
 		"/upload",
 		Upload,
 	},
