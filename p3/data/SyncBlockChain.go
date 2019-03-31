@@ -76,7 +76,7 @@ func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 }
 
 /* TODO: We're iterating Length here because that needs to be done for this implementation,
-but this should be done in the Blockchain class. Not sure atm why wasn't done before. */
+but this should probably be done in the Blockchain class. */
 func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()

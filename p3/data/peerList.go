@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	// "strings"
+	"container/ring"
 	"sync"
 )
 
@@ -25,9 +25,10 @@ type JsonPeerList struct {
 	JsonRep string
 }
 
+/* Pair will hold peermap key as value, and value as key because that makes more sense */
 type Pair struct {
-	Key string
-	Value int32
+	Key int32
+	Value string
 }
 
 type PairList []Pair
@@ -37,14 +38,14 @@ func (p PairList) Len() int {
 }
 
 func (p PairList) Less(i, j int) bool {
-	return p[i].Value < p[j].Value
+	return p[i].Key < p[j].Key
 }
 
 func (p PairList) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
-func (p PairList) GetValue(i int) int32 {
+func (p PairList) GetValue(i int) string {
 	return p[i].Value
 }
 
@@ -72,61 +73,63 @@ func(peers *PeerList) Delete(addr string) {
 For example, if SelfId is 10, PeerList is [7, 8, 9, 15, 16], then the closest 4 nodes are [8, 9, 15, 16].
  */
 func(peers *PeerList) Rebalance() {
-	fmt.Println("In Rebalance")
 	peers.mux.Lock()
-	defer peers.mux.Unlock()
+	peers.peerMap["myAddr"] = peers.selfId
+	newPeerMap := make (map[string]int32)
 	pairList := make(PairList, len(peers.peerMap))
-	newPairList := make (PairList, len(peers.peerMap))
+	correctKeys := []string{}
+	//newPairList := make (PairList, 2 * peers.maxLength)
 	i := 0
+	/* Add to list of pairs to sort, and delete also */
 	for k, v := range peers.peerMap {
-		pairList[i] = Pair{k, v}
+		pairList[i] = Pair{v, k}
 		i++
 	}
+	halfList := int(peers.maxLength/2)
 	sort.Sort(pairList)
-	fmt.Println(pairList)
-	/* Array is now sorted. Now grab 16 to the left, and 16 to the right, if array is < 32 */
-	if peers.maxLength < peers.maxLength {
-		/* get to the point of selfID. Keep count to see how far in we go. */
-		counter := 0
-		halfList := int(peers.maxLength/2)
-		for i := range pairList {
-			counter ++
-			/* Once we get here, count 16 back and forward */
-			if  pairList.GetValue(i) == peers.selfId {
-				if counter >= halfList {
-					/* grab everything to the right since counter > 16 and there should be enough */
-					for z := counter; z < counter+halfList; z++ {
-						newPairList = append(newPairList, pairList[z])
-					}
-					/* grab all available to the left of the counter */
-					for z := counter; z > 0; z-- {
-						newPairList = append(newPairList, pairList[z])
-					}
-					remaining := halfList - counter
-					/* Grab the remaining from the end of the array */
-					for z := len(pairList); z > len(pairList) - remaining; z-- {
-						newPairList = append(newPairList, pairList[z])
-					}
-				} else {
-					for z := counter; z < len(pairList); z++ {
-						newPairList = append(newPairList, pairList[z])
-					}
-					/* grab 16 to the left of the counter */
-					for z := counter; z > counter - halfList; z-- {
-						newPairList  = append(newPairList, pairList[z])
-					}
-					remaining := halfList - counter
-					/* Grab the remaining from the beginning of the array */
-					for z := 0; z > remaining; z++ {
-						newPairList = append(newPairList, pairList[z])
-					}
-				}
-				break
+	r := ring.New(len(pairList))
+	n := r.Len()
+
+	for i := 0; i < n; i++ {
+		r.Value = pairList[i].Value
+		r = r.Next()
+	}
+
+	/* Loop through ring of the keys now that they're sorted. Values are the string keys */
+	for i := 0; i < n; i++ {
+		if r.Value == "myAddr" {
+			/* Found the selfId, so go back -halfList */
+			r = r.Move(-halfList)
+			for z := 0; z < halfList; z++ {
+				fmt.Println(r.Value.(string))
+				/* Then add what we find to the PeerList */
+				correctKeys = append(correctKeys, r.Value.(string))
+				r = r.Next()
+			}
+			/* Now get the right half */
+			r = r.Next()
+			for z := 0; z < halfList; z++ {
+				/* Then add what we find to the PeerList */
+				correctKeys = append(correctKeys, r.Value.(string))
+				r = r.Next()
+			}
+
+		}
+		r = r.Next()
+	}
+	/* Add correct keys to new peer map */
+	for i:= 0; i < len(correctKeys); i++ {
+		// found := false
+		if val, ok := peers.peerMap[correctKeys[i]]; ok {
+			/* Make sure we don't add self */
+			if val != peers.selfId {
+				newPeerMap[correctKeys[i]] = peers.peerMap[correctKeys[i]]
 			}
 		}
-		/* Now put the new array back into the map */
 	}
-	fmt.Println("End of Rebalance")
+	/* Add new peermap to peerlist */
+	peers.peerMap = newPeerMap
+	peers.mux.Unlock()
 }
 
 /* Putting a lock here creates deadlock so don't do it */
@@ -184,6 +187,8 @@ func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) 
 		fmt.Println("Error")
 	}
 	for k, v := range jsonMap {
+		fmt.Println("Self Address")
+		fmt.Println(selfAddr)
 		if k != selfAddr {
 			peers.Add(k, v)
 		}

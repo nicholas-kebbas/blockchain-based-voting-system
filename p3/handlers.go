@@ -46,46 +46,44 @@ type JsonString struct {
 	// Start()
 */
 func init() {
-
+	ifStarted = false
 }
 
 // Register ID, download BlockChain, start HeartBeat
 func Start(w http.ResponseWriter, r *http.Request) {
-	// blockChainJson, err := SBC.BlockChainToJson()
-	//if err != nil {
-	//	/* Report the error */
-	//	// data.PrintError(err, "Upload")
-	//}
 	/* Get address and ID */
-	url := r.RequestURI
-	fmt.Println(url)
-	splitURL := strings.Split(url, "/")
-	fmt.Println(splitURL)
-	/* Get port number and set that to ID */
-	fmt.Println(r.Host)
-	/* Save localhost as Addr */
-	fmt.Println(r.URL.Path)
-	splitHostPort := strings.Split(r.Host, ":")
-	i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
-	if err != nil {
-		w.WriteHeader(500)
-		panic(err)
-	}
-	/* ID is now port number. Address is now correct Address */
-	ID = int32(i)
-	SELF_ADDR = r.Host
-	/* Need to instantiate the peer list */
-	if len(Peers.GetPeerMap()) == 0 {
-		Peers = data.NewPeerList(ID, 32)
-	}
+	if ifStarted != true {
+		url := r.RequestURI
+		fmt.Println(url)
+		splitURL := strings.Split(url, "/")
+		fmt.Println(splitURL)
+		/* Get port number and set that to ID */
+		fmt.Println(r.Host)
+		/* Save localhost as Addr */
+		fmt.Println(r.URL.Path)
+		splitHostPort := strings.Split(r.Host, ":")
+		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+		if err != nil {
+			w.WriteHeader(500)
+			panic(err)
+		}
+		/* ID is now port number. Address is now correct Address */
+		ID = int32(i)
+		SELF_ADDR = r.Host
+		/* Need to instantiate the peer list */
+		if len(Peers.GetPeerMap()) == 0 {
+			Peers = data.NewPeerList(ID, 32)
+		}
 
-	/* Need to also add the first node that we're connecting to, as long as this isn't Node 1 */
-	if SELF_ADDR != FIRST_NODE_ADDRESS {
-		Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
-		Download()
+		/* Need to also add the first node that we're connecting to, as long as this isn't Node 1 */
+		if SELF_ADDR != FIRST_NODE_ADDRESS {
+			Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
+			Download()
+		}
+		fmt.Println("Starting Heartbeat in", SELF_ADDR)
+		go StartHeartBeat()
+		ifStarted = true
 	}
-	fmt.Println("Starting Heartbeat in", SELF_ADDR)
-	go StartHeartBeat()
 }
 
 // Display peerList and sbc
@@ -167,15 +165,8 @@ func Download() {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
-	fmt.Println("Body in Download")
 	SBC = data.NewBlockChain()
 	SBC.UpdateEntireBlockChain(string(body))
-	fmt.Println("String body")
-	fmt.Println(string(body))
-	fmt.Println("Final Updated Blockchain")
-	fmt.Println(SBC)
-	fmt.Println("As JSON")
-	fmt.Println(SBC.BlockChainToJson())
 }
 
 // Called By Download (POST Request from local node's Download Function)
@@ -208,8 +199,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// data.PrintError(err, "Upload")
 	}
-	fmt.Println("Blockchain in Upload Function")
-	fmt.Println(blockChainJson)
 	fmt.Fprint(w, blockChainJson)
 }
 
@@ -255,9 +244,6 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	/* Parse the request */
-	fmt.Println("Receiving Heartbeat")
-	fmt.Println(r.Host)
-	// Peers.Add(r.Host, r.)
 	jsonPeerList, _ := Peers.PeerMapToJson()
 	data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
 
@@ -271,9 +257,9 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	/* Adding Sender to peer list as well as Peers */
+	/* Adding Sender to peer list as well as Sender's Peerlist */
 	Peers.Add(t.Addr, t.Id)
-	Peers.InjectPeerMapJson(t.PeerMapJson ,SELF_ADDR)
+	Peers.InjectPeerMapJson(t.PeerMapJson, SELF_ADDR)
 	/* Check if heartbeat contains new block */
 	if t.IfNewBlock == true {
 		/* If it contains new block, check if our blockchain has parent */
@@ -295,8 +281,6 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	fmt.Println("End of receive heartbeat")
-	// Peers.InjectPeerMapJson()
 }
 
 // Ask another server to return a block of certain height and hash

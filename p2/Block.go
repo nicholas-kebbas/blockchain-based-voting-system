@@ -74,7 +74,6 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.ParentHash = j.ParentHash
 	b.Header.TimeStamp = j.Timestamp
 	b.Header.Height = j.Height
-
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
 
