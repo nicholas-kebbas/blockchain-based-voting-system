@@ -8,13 +8,19 @@ import (
 )
 
 func TestRebalance(t *testing.T) {
-	peerList := data.NewPeerList(1, 32)
-	peerList.Add("address2", 8)
-	peerList.Add("address0", 6)
-	peerList.Add("address1", 7)
-	peerList.Add("address3", 12)
-	peerList.Add("address4", 15)
+	peerList := data.NewPeerList(6688, 32)
+	peerList.Add("localhost:6670", 6670)
 	peerList.Rebalance()
+}
+
+func TestInjectPeerMapJson (t *testing.T) {
+	peers := data.NewPeerList(6688, 32)
+	peers.Add("localhost:6670", 6670)
+	peers.Rebalance()
+	peers.Show()
+	fmt.Println("Injecting JSON")
+	peers.InjectPeerMapJson("{\"localhost:6670\":6670,\"localhost:6675\":6675,\"localhost:6688\":6688}", "localhost:6688")
+	peers.Show()
 }
 
 func TestRebalance2(t *testing.T) {

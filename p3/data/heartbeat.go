@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"math/rand"
+	"strconv"
 )
 
 /* Heartbeat is the JSON representation of the data we need to send to the other blockchains
@@ -36,7 +37,10 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		/* Just get the first one in that array for now since we don't know what to do w/ forks */
 		mpt := p1.MerklePatriciaTrie{}
 		mpt.Initial()
-		mpt.Insert("nick", "kebbas")
+		randomInt := rand.Int()
+		key := "nick" + strconv.Itoa(randomInt)
+		value := "kebbas" + strconv.Itoa(randomInt)
+		mpt.Insert(key, value)
 		newBlock := sbc.GenBlock(mpt)
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData

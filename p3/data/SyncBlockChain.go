@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"sync"
@@ -27,6 +28,8 @@ func(sbc *SyncBlockChain) Get(height int32) ([]p2.Block, bool) {
 }
 
 func(sbc *SyncBlockChain) GetBlock(height int32, hash string) (p2.Block, bool) {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
 	blocks := sbc.bc.Get(height)
 	i := 0
 	for i = 0; i < len(blocks); i++ {
@@ -46,6 +49,8 @@ func(sbc *SyncBlockChain) Insert(block p2.Block) {
 
 /* Check if this block is found in the chain */
 func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
 	if sbc.bc.CheckForHash(insertBlock.Header.ParentHash) {
 		return true
 	}
@@ -53,33 +58,46 @@ func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
 }
 
 func(sbc *SyncBlockChain) UpdateEntireBlockChain(blockChainJson string) {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
+	fmt.Println("Update Entire Block chain:")
+	fmt.Println(blockChainJson)
 	p2.DecodeFromJSON(&sbc.bc, blockChainJson)
+	fmt.Println("Update Entire Block chain Blockchain after Decode:")
+	fmt.Println(sbc.bc)
 }
 
 /* TODO: Fix error handling on this one */
 func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
 	jsonBlockChain := sbc.bc.EncodeToJSON()
-	return jsonBlockChain,  errors.New("need to fix this error handling")
+	return jsonBlockChain,  errors.New("There was an error")
 }
 
-/* TODO: Generate Block only having the MPT. */
+/* TODO: We're iterating Length here because that needs to be done for this implementation,
+but this should be done in the Blockchain class. Not sure atm why wasn't done before. */
 func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
 	height := sbc.bc.Length
 	if height == 0 {
 		sbc.bc = p2.NewBlockChain()
 		newBlock := p2.Initial(height, 123, "Genesis", mpt)
 		sbc.bc.Insert(newBlock)
-		sbc.mux.Unlock()
+		sbc.bc.Length +=1
 		return newBlock
 	}
-	latestBlock := sbc.bc.Get(height)[0]
+	/* -1 because we're getting the hash of the parent */
+	latestBlock := sbc.bc.Get(height-1)[0]
 	newBlock := p2.Initial(height, 123, latestBlock.Header.Hash, mpt)
 	sbc.bc.Insert(newBlock)
-	sbc.mux.Unlock()
+	sbc.bc.Length += 1
 	return newBlock
 }
 
 func(sbc *SyncBlockChain) Show() string {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
 	return sbc.bc.Show()
 }

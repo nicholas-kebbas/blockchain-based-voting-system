@@ -102,12 +102,14 @@ func (blockchain *BlockChain) EncodeToJSON() string {
 		}
 	}
 
+
 	bs2, _:= json.Marshal(jsonBlockArray)
 		return string(bs2)
 	}
 
 /**
 Takes as input the blockchain that will have blocks added to it, and a json representation of blocks.
+This might be causing a problem.
  */
 func DecodeFromJSON(blockchain *BlockChain, jsonString string) {
 	b := Block{}
@@ -122,6 +124,8 @@ func DecodeFromJSON(blockchain *BlockChain, jsonString string) {
 		b = b.DecodeFromJson(string(jsonString))
 		blockchain.Insert(b)
 	}
+	fmt.Println("Decode From: ")
+	fmt.Println(blockchain)
 }
 
 func (jbc JsonBlockChain) String() string {
