@@ -168,7 +168,7 @@ func Download() {
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
 	fmt.Println("Body in Download")
-	SBC := data.NewBlockChain()
+	SBC = data.NewBlockChain()
 	SBC.UpdateEntireBlockChain(string(body))
 	fmt.Println("String body")
 	fmt.Println(string(body))
