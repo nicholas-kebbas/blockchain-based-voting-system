@@ -108,6 +108,7 @@ func Register() {
 
 /* Create the initial canonical Blockchain and add write it to the server */
 func Create (w http.ResponseWriter, r *http.Request) {
+	/* Carefl this is an SBC */
 	newBlockChain := data.NewBlockChain()
 	mpt := p1.MerklePatriciaTrie{}
 	mpt.Initial()
@@ -153,12 +154,12 @@ func Download() {
 	/* Make http request and download from BC_DOWNLOAD_SERVER */
 	// So Download makes a POST request to First Node Server/upload.
 	// Then the response will be HeartBeatdata (configure that in Upload())
-	//
-	// BC_DOWNLOAD_SERVER
 	jsonPeerList, _ := Peers.PeerMapToJson()
 	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
 	fmt.Println("Peer Map JSON")
 	fmt.Println(newHeartBeatData.HeartBeatToJson())
+	fmt.Println("SBC IN DOWNLOAD BEFORE REQUEST")
+	fmt.Println(SBC)
 	/* Need to figure out what to send here in the request */
 	res, _ := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
 	//res, _ := http.DefaultClient.Do(req)
@@ -167,6 +168,8 @@ func Download() {
 	/* Instantiate and grab the blockchain */
 	SBC = data.NewBlockChain()
 	SBC.UpdateEntireBlockChain(string(body))
+	fmt.Println("SBC IN DOWNLOAD AFTER REQUEST")
+	fmt.Println(SBC)
 }
 
 // Called By Download (POST Request from local node's Download Function)
@@ -206,11 +209,16 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 //  return HTTP 204: StatusNoContent; if there's an error, return HTTP 500: InternalServerError.
 func UploadBlock(w http.ResponseWriter, r *http.Request) {
 	url := r.RequestURI
+	fmt.Println("URL IN UPLOAD BLOCK")
 	fmt.Println(url)
 	splitURL := strings.Split(url, "/")
 	blockHeightString := splitURL[2]
+	fmt.Println("Block Height String")
+	fmt.Println(blockHeightString)
+	cleanHeight := strings.Replace(blockHeightString, "%0", "", 1)
+	cleanHeight = strings.Replace(blockHeightString, "%", "", 1)
 	blockHash := splitURL[3]
-	i, err := strconv.ParseInt(blockHeightString, 10, 32)
+	i, err := strconv.ParseInt(cleanHeight, 10, 32)
 	if err != nil {
 		w.WriteHeader(500)
 		panic(err)
@@ -218,11 +226,14 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 	blockHeight := int32(i)
 
 	block, found := SBC.GetBlock(blockHeight, blockHash)
+
 	/* Found it so write the JSONblock to output */
 	if found == true {
+		fmt.Println("Block found in Upload Block")
 		w.WriteHeader(200)
 		fmt.Fprint(w, block.EncodeToJSON())
 	} else {
+		fmt.Println("Block not found in upload block")
 		w.WriteHeader(204)
 	}
 
@@ -243,9 +254,9 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 */
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
-	/* Parse the request */
-	jsonPeerList, _ := Peers.PeerMapToJson()
-	data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
+	/* Parse the request. Don't think i need this part */
+	//jsonPeerList, _ := Peers.PeerMapToJson()
+	//data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
 
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
@@ -264,15 +275,27 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	if t.IfNewBlock == true {
 		/* If it contains new block, check if our blockchain has parent */
 		newBlock := p2.Block{}
-		newBlock.DecodeFromJson(t.BlockJson)
+		fmt.Println("Block JSON we're about to add to our chain")
+		fmt.Println(t.BlockJson)
+		/* Have to quote it? that causes an error too */
+		//testingString := strconv.Quote(t.BlockJson)
+		//fmt.Println(testingString)
+		newBlock = newBlock.DecodeFromJson(t.BlockJson)
+		fmt.Println("New Block Printed")
+		/* Decode from JSON not working. So this is where the problem is */
+		fmt.Println(newBlock)
 		/* Might need to lock here */
 		if SBC.CheckParentHash(newBlock) == false {
-			/* We do -1 because we need the parents height */
-			AskForBlock(newBlock.Header.Height - 1, newBlock.Header.ParentHash)
-			fmt.Println("Adding parent hash, next line should always be true")
+			/* We do -1 because we need the parents height. But newblock header height is 0 right now, so this is wrong
+			newBlock.Header.ParentHash is also blank.
+			*/
+			fmt.Println("New change here. Doing -1 seems to be necessary")
+			AskForBlock(SBC.GetLength() - 1, newBlock.Header.ParentHash)
+			fmt.Println("Adding parent hash, should see Inserting new block next")
 		}
 		if SBC.CheckParentHash(newBlock) == true {
-			fmt.Println("Inserting new Block")
+			fmt.Println("Inserting new Block of Height")
+			fmt.Println(newBlock.Header.Height)
 			SBC.Insert(newBlock)
 			t.Hops = t.Hops - 1
 			/* If still greater than 1, forward on */
@@ -283,49 +306,61 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Ask another server to return a block of certain height and hash
+// Ask another server to return a block of certain height and hash. We cannot find the block ever, so problem starts here
 func AskForBlock(height int32, hash string) {
 	fmt.Println("Asking for block")
 	localPeerMap := Peers.GetPeerMap()
 	for k, _ := range localPeerMap {
-		remoteAddress := "http://" + k + "/block/" + string(height) + "/" + hash
+		fmt.Println("Local peer map")
+		fmt.Println(k)
+		fmt.Println(height)
+		fmt.Println("string(height)")
+		s := strconv.FormatInt(int64(height), 10)
+		fmt.Println(s)
+		fmt.Println(hash)
+		/* Calls Upload Block */
+		remoteAddress := "http://" + k + "/block/" + s + "/" + hash
 		/* Make a GET request to peer to see if the block is there */
+		fmt.Println("Making get request")
 		req, _ := http.NewRequest("GET", remoteAddress, nil)
 		res, _ := http.DefaultClient.Do(req)
+		body2, _ := ioutil.ReadAll(res.Body)
+		fmt.Println(body2)
 		defer res.Body.Close()
+		/* This means no block */
 		if res.StatusCode == 204 {
+			fmt.Println("No content here")
+		} else if res.StatusCode == 200 {
+			fmt.Println("Found block!")
 			body, _ := ioutil.ReadAll(res.Body)
 			fmt.Println(string(body))
-			/* May not need to do any of this unmarshaling. Leaving here for now */
-			newJsonBlock := p2.JsonBlock{}
-			err := json.Unmarshal(body, newJsonBlock)
-			if err != nil {
-				fmt.Println("Could not unmarshal block")
-			}
 			newBlock := p2.Block{}
 			newBlock.DecodeFromJson(string(body))
+			fmt.Println("Printing new block in ASkForBlock")
+			fmt.Println(newBlock)
 			SBC.Insert(newBlock)
 			break
+		} else {
+			fmt.Println("500 error")
 		}
 		res.Body.Close()
-
 	}
-	SBC.GetBlock(height, hash)
+	// SBC.GetBlock(height, hash)
 }
 
 /* Send to all the peers. Will probably want to send a post request to their ReceiveHeartBeat */
 func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
-	fmt.Println("Forward Heart Beat. Breaking on rebalance")
+	fmt.Println("Forward Heart Beat.")
 	/* Need to rebalance before send. Makes the most sense to do it here */
 	Peers.Rebalance()
-	fmt.Println("Rebalanced")
 	/* Get the peerMap */
 	localPeerMap := Peers.GetPeerMap()
 	for k,v := range localPeerMap {
 		remoteAddress := "http://" + k + "/heartbeat/receive"
+		fmt.Println("remoteAddress")
 		fmt.Println(remoteAddress)
 		fmt.Println(v)
-		fmt.Println("Data sending")
+		fmt.Println("Data Forwarding")
 		fmt.Println(heartBeatData.HeartBeatToJson())
 		resp, _ := http.Post(remoteAddress, "application/json; charset=UTF-8", strings.NewReader(heartBeatData.HeartBeatToJson()))
 		fmt.Println(resp)
@@ -333,7 +368,7 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 }
 
 func StartHeartBeat() {
-	for range time.Tick(time.Second *5) {
+	for range time.Tick(time.Second *7) {
 		fmt.Println("Heartbeat")
 		/* PrepareHeartBeatData() to create a HeartBeatData,
 		and send it to all peers in the local PeerMap */

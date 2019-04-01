@@ -58,4 +58,9 @@ func TestBlockChainBasic2(t *testing.T) {
 		fmt.Println(expectedValue)
 		t.Fail()
 	}
+
+}
+
+func TestBlock(t *testing.T) {
+
 }

@@ -68,7 +68,8 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	for k, v := range j.MPT {
 		m.Insert(k, v)
 	}
-
+	//fmt.Println("Json block in decode")
+	//fmt.Println(j)
 	b.Header.Size = j.Size
 	b.Header.Hash = j.Hash
 	b.Header.ParentHash = j.ParentHash
@@ -76,6 +77,12 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.Height = j.Height
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
+	//fmt.Println("block in decode")
+	//fmt.Println(b)
+	//fmt.Println("Height: ")
+	//fmt.Println(b.Header.Height)
+	//fmt.Println("Hash: ")
+	//fmt.Println(b.Header.Hash)
 
 	return b
 }

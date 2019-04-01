@@ -27,6 +27,12 @@ func(sbc *SyncBlockChain) Get(height int32) ([]p2.Block, bool) {
 	return sbc.bc.Get(height), false
 }
 
+func(sbc *SyncBlockChain) GetLength() (height int32) {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
+	return sbc.bc.Length
+}
+
 func(sbc *SyncBlockChain) GetBlock(height int32, hash string) (p2.Block, bool) {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
@@ -51,6 +57,8 @@ func(sbc *SyncBlockChain) Insert(block p2.Block) {
 func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
+	fmt.Println("Entering sbc.bc.CheckForHash, checking for")
+	fmt.Println(insertBlock.Header.ParentHash)
 	if sbc.bc.CheckForHash(insertBlock.Header.ParentHash) {
 		return true
 	}
@@ -82,17 +90,19 @@ func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	defer sbc.mux.Unlock()
 	height := sbc.bc.Length
 	if height == 0 {
+		fmt.Println("HEIGHT IS 0.")
+		fmt.Println("This should only show up in first node")
 		sbc.bc = p2.NewBlockChain()
-		newBlock := p2.Initial(height, 123, "Genesis", mpt)
+		newBlock := p2.Initial(1, 123, "Genesis", mpt)
 		sbc.bc.Insert(newBlock)
-		sbc.bc.Length +=1
 		return newBlock
 	}
-	/* -1 because we're getting the hash of the parent */
-	latestBlock := sbc.bc.Get(height-1)[0]
-	newBlock := p2.Initial(height, 123, latestBlock.Header.Hash, mpt)
+	/* -1 because we're getting the hash of the parent. But this should just be height, maybe*/
+	fmt.Println("height in GENERATE BLOCK")
+	fmt.Println(height)
+	latestBlock := sbc.bc.Get(height)[0]
+	newBlock := p2.Initial(height + 1, 123, latestBlock.Header.Hash, mpt)
 	sbc.bc.Insert(newBlock)
-	sbc.bc.Length += 1
 	return newBlock
 }
 

@@ -44,11 +44,15 @@ func (blockchain *BlockChain) CheckForHash(hash string) bool {
 	var i int32 = 0
 	for i = 0; i < blockchain.Length; i++ {
 		for z := 0; z < len(blockchain.Get(i)); z++ {
+			fmt.Println("Check for HASH header hash")
+			fmt.Println(blockchain.Get(i)[z].Header.Hash)
 			if blockchain.Get(i)[z].Header.Hash == hash {
+				fmt.Println("Found the hash")
 				return true
 			}
 		}
 	}
+	fmt.Println("Can't find the parent in Blockchain CheckforHash()")
 	return false
 }
 
@@ -79,6 +83,7 @@ func (blockchain *BlockChain) Insert(block Block) {
 		blockchain.Length = block.Header.Height
 	}
 	blockchain.Chain[block.Header.Height] = blockArray
+
 }
 
 /**

@@ -101,7 +101,6 @@ func(peers *PeerList) Rebalance() {
 			/* Found the selfId, so go back -halfList */
 			r = r.Move(-halfList)
 			for z := 0; z < halfList; z++ {
-				fmt.Println(r.Value.(string))
 				/* Then add what we find to the PeerList */
 				correctKeys = append(correctKeys, r.Value.(string))
 				r = r.Next()

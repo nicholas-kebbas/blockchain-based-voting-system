@@ -24,7 +24,7 @@ func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson s
 		blockJson,
 		peerMapJson,
 		addr,
-		3}
+		2}
 	return heartBeatData
 }
 
@@ -41,6 +41,7 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		key := "nick" + strconv.Itoa(randomInt)
 		value := "kebbas" + strconv.Itoa(randomInt)
 		mpt.Insert(key, value)
+		/* This is adding to own fine. Maybe overwriting parent */
 		newBlock := sbc.GenBlock(mpt)
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData
