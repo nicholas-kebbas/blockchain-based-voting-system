@@ -1,11 +1,13 @@
 package p3
 
 import (
-	"./data"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
+	"golang.org/x/crypto/sha3"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -13,7 +15,7 @@ import (
 
 	//"github.com/gorilla/mux"
 	//"io"
-	//"math/rand"
+	"math/rand"
 	"net/http"
 	//"time"
 )
@@ -239,6 +241,10 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func Canonical(w http.ResponseWriter, r *http.Request) {
+
+}
+
 /*  Received a heartbeat and follow these steps:
  Add the remote address, and the PeerMapJSON into local PeerMap.
  At this time, the number of peers stored in PeerList might exceed 32 and it is ok
@@ -254,10 +260,9 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 */
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
-	/* Parse the request. Don't think i need this part */
-	//jsonPeerList, _ := Peers.PeerMapToJson()
-	//data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
 
+	/* TODO: May need to change where we rand.Seed() but doing it here for now */
+	RandSeed()
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
@@ -306,7 +311,7 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Ask another server to return a block of certain height and hash. We cannot find the block ever, so problem starts here
+/* TODO: Update this function to recursively ask for all the missing predesessor blocks instead of only the parent block.  */
 func AskForBlock(height int32, hash string) {
 	fmt.Println("Asking for block")
 	localPeerMap := Peers.GetPeerMap()
@@ -321,11 +326,8 @@ func AskForBlock(height int32, hash string) {
 		/* Calls Upload Block */
 		remoteAddress := "http://" + k + "/block/" + s + "/" + hash
 		/* Make a GET request to peer to see if the block is there */
-		fmt.Println("Making get request")
 		req, _ := http.NewRequest("GET", remoteAddress, nil)
 		res, _ := http.DefaultClient.Do(req)
-		body2, _ := ioutil.ReadAll(res.Body)
-		fmt.Println(body2)
 		defer res.Body.Close()
 		/* This means no block */
 		if res.StatusCode == 204 {
@@ -333,11 +335,8 @@ func AskForBlock(height int32, hash string) {
 		} else if res.StatusCode == 200 {
 			fmt.Println("Found block!")
 			body, _ := ioutil.ReadAll(res.Body)
-			fmt.Println(string(body))
 			newBlock := p2.Block{}
 			newBlock.DecodeFromJson(string(body))
-			fmt.Println("Printing new block in ASkForBlock")
-			fmt.Println(newBlock)
 			SBC.Insert(newBlock)
 			break
 		} else {
@@ -376,4 +375,86 @@ func StartHeartBeat() {
 		newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR)
 		ForwardHeartBeat(newHeartBeatData)
 	}
+}
+
+/*
+This function starts a new thread that tries different nonces to generate new blocks.
+Nonce is a string of 16 hexes such as "1f7b169c846f218a".
+Initialize the rand when you start a new node with something unique about each node, such as the current time or the port number.
+
+ */
+func StartTryingNonces(n int) {
+	/* Start a while loop. */
+	verified := false
+	var i = 1
+	for i < 1000 {
+	nonce := CalculateNonce()
+	parentHash := ""
+	if SBC.GetLength() == 0 {
+		parentHash = "123456789"
+	} else {
+		parentBlock := SBC.GetLatestBlocks()[0]
+		parentHash = parentBlock.Header.Hash
+	}
+	mpt := GenerateRandomMpt()
+	str := parentHash + nonce + mpt.GetRoot()
+	hash := sha3.Sum256([]byte(str))
+	fmt.Print(hash)
+	/* Break the loop if verified */
+	firstN := string(hash[0:n])
+	var z = 0
+	for z = 0; z < len(firstN); z++ {
+		if string(firstN[z]) != "0" {
+			break
+		}
+		verified = true
+	}
+	if verified {
+		fmt.Print("This is good")
+		i = 1000
+	}
+	}
+	/* Get the latest block or one of the latest blocks to use as a parent block. */
+
+	/* Create an MPT. */
+
+	/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
+	Since we use one laptop to try different nonces, six to seven 0's could be enough.
+	If the nonce failed the verification, increment it by 1 and try the next nonce.
+	 */
+
+	 /* If a nonce is found and the next block is generated, forward that block to all peers with an HeartBeatData;
+	  */
+
+	  /*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
+	  stop trying nonce on the current block, continue to the while loop by jumping to the step(2)
+	   */
+}
+
+func CalculateNonce() string {
+	nonce := GenerateRandomString(8)
+	//sum := sha3.Sum256([]byte(str))
+	return  nonce
+}
+
+func GenerateRandomString(length int) string {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func GenerateRandomMpt() p1.MerklePatriciaTrie {
+	mpt := p1.MerklePatriciaTrie{}
+	mpt.Initial()
+	randomInt := rand.Int()
+	key := "nick" + strconv.Itoa(randomInt)
+	value := "kebbas" + strconv.Itoa(randomInt)
+	mpt.Insert(key, value)
+	return mpt
+}
+
+func RandSeed() {
+	rand.Seed(int64(ID))
 }

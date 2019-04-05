@@ -48,4 +48,10 @@ var routes = Routes{
 		"/create",
 		Create,
 	},
+	Route{
+		"Canonical",
+		"GET",
+		"/canonical",
+		Canonical,
+	},
 }

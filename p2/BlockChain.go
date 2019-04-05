@@ -3,6 +3,7 @@ package p2
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/sha3"
 	"sort"
@@ -54,6 +55,27 @@ func (blockchain *BlockChain) CheckForHash(hash string) bool {
 	}
 	fmt.Println("Can't find the parent in Blockchain CheckforHash()")
 	return false
+}
+
+func (blockchain *BlockChain) GetLatestBlocks() []Block {
+	return blockchain.Get(blockchain.Length)
+}
+
+func (blockchain *BlockChain) GetParentBlock(block Block) (Block, error) {
+	parentHeight := block.Header.Height - 1
+	/* Catch error if */
+	parentHash := block.Header.ParentHash
+	blocks := blockchain.Get(parentHeight)
+	if blockchain.Length < parentHeight {
+		return blocks[0], errors.New("Parent Block Not in Chain")
+	}
+
+	for z := range blocks {
+		if blocks[z].Header.ParentHash == parentHash {
+			return blocks[z], nil
+		}
+	}
+	return blocks[0], errors.New("Parent Block Not in Chain")
 }
 
 

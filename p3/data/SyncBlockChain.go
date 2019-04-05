@@ -106,6 +106,18 @@ func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	return newBlock
 }
 
+func (sbc *SyncBlockChain) GetLatestBlocks() []p2.Block {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
+	return sbc.bc.Get(sbc.bc.Length)
+}
+
+func (sbc *SyncBlockChain) GetParentBlock(block p2.Block) (p2.Block, error) {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
+	return sbc.bc.GetParentBlock(block)
+}
+
 func(sbc *SyncBlockChain) Show() string {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()

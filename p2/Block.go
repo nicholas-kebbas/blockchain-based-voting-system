@@ -19,7 +19,7 @@ type Header struct {
 	Height     int32 `json:"height"`
 	ParentHash string `json:"parentHash"`
 	Size       int32 `json:"size"`
-}
+	Nonce      string `json:"nonce"`}
 
 type Value struct {
 	mpt p1.MerklePatriciaTrie
@@ -35,6 +35,7 @@ type JsonBlock struct {
 	Height     int32             `json:"height"`
 	ParentHash string            `json:"parentHash"`
 	Size       int32             `json:"size"`
+	Nonce      string            `json:"nonce"`
 	MPT        map[string]string `json:"mpt"`
 }
 
@@ -46,7 +47,9 @@ func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatr
 	hash := deriveHash(height, timestamp, parentHash, mpt)
 	size := len([]byte(fmt.Sprintf("%v", mpt)))
 	size32 := int32(size)
-	newHeader := Header{hash, timestamp, height, parentHash, size32}
+	/* TODO: Change Nonce */
+	nonce := ""
+	newHeader := Header{hash, timestamp, height, parentHash, size32, nonce}
 	newValue := Value{mpt, mpt.GetStringDb()}
 	newBlock := Block{newHeader, newValue}
 	return newBlock
@@ -68,22 +71,14 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	for k, v := range j.MPT {
 		m.Insert(k, v)
 	}
-	//fmt.Println("Json block in decode")
-	//fmt.Println(j)
 	b.Header.Size = j.Size
 	b.Header.Hash = j.Hash
 	b.Header.ParentHash = j.ParentHash
 	b.Header.TimeStamp = j.Timestamp
 	b.Header.Height = j.Height
+	b.Header.Nonce = j.Nonce
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
-	//fmt.Println("block in decode")
-	//fmt.Println(b)
-	//fmt.Println("Height: ")
-	//fmt.Println(b.Header.Height)
-	//fmt.Println("Hash: ")
-	//fmt.Println(b.Header.Hash)
-
 	return b
 }
 
