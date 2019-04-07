@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"math/rand"
-	"strconv"
 )
 
 /* Heartbeat is the JSON representation of the data we need to send to the other blockchains
@@ -30,19 +29,14 @@ func NewHeartBeatData(ifNewBlock bool, id int32, blockJson string, peerMapJson s
 
 /* Create a new instance of HeartBeatData, then decide whether to create a new block and send it to other peers.
 */
-func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string, addr string) HeartBeatData {
+func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string, addr string, verified bool, nonce string, trie p1.MerklePatriciaTrie) HeartBeatData {
 	/* Randomly decide whether to create new block and send to peers. */
-	if rand2() == true {
+	if verified == true {
 		heartBeatData := NewHeartBeatData(true, selfId, " ", peerMapJson, addr)
 		/* Just get the first one in that array for now since we don't know what to do w/ forks */
-		mpt := p1.MerklePatriciaTrie{}
-		mpt.Initial()
-		randomInt := rand.Int()
-		key := "nick" + strconv.Itoa(randomInt)
-		value := "kebbas" + strconv.Itoa(randomInt)
-		mpt.Insert(key, value)
 		/* This is adding to own fine. Maybe overwriting parent */
-		newBlock := sbc.GenBlock(mpt)
+		newBlock := sbc.GenBlock(trie)
+		newBlock.Header.Nonce = nonce
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData
 	} else {

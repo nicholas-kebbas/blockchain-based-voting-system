@@ -42,11 +42,19 @@ func (blockchain *BlockChain) Get(height int32) []Block {
 
 /* Check if hash exists in blockchain */
 func (blockchain *BlockChain) CheckForHash(hash string) bool {
+	fmt.Println("length in blockchain check for hash")
+	fmt.Println(blockchain.Length)
 	var i int32 = 0
-	for i = 0; i < blockchain.Length; i++ {
+	/* This might need to start at 1 since the blockchain starts at 1. There's nothing at 0 ever */
+	for i = 1; i <= blockchain.Length; i++ {
+		fmt.Print("In outer for loop ")
 		for z := 0; z < len(blockchain.Get(i)); z++ {
-			fmt.Println("Check for HASH header hash")
-			fmt.Println(blockchain.Get(i)[z].Header.Hash)
+			fmt.Print("Hash: ")
+			fmt.Print(hash)
+			fmt.Print("Checking against ")
+			fmt.Print(blockchain.Get(i)[z])
+			fmt.Print("Checking against Header Hash ")
+			fmt.Print(blockchain.Get(i)[z].Header.Hash)
 			if blockchain.Get(i)[z].Header.Hash == hash {
 				fmt.Println("Found the hash")
 				return true
@@ -97,6 +105,8 @@ func (blockchain *BlockChain) Insert(block Block) {
 	/* else it's not in the chain, so add it and adjust BC Length */
 
 	/* Need to get height of block being entered */
+	fmt.Println("Height in Blockchain Insert")
+	fmt.Println(block.Header.Height)
 	blockArray := blockchain.Chain[block.Header.Height]
 	blockArray = append(blockArray, block)
 

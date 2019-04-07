@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./p3"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3"
 	"fmt"
 	"log"
 	"net/http"

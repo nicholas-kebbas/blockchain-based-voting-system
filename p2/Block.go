@@ -32,7 +32,7 @@ JSON Representation of a block
 type JsonBlock struct {
 	Hash       string            `json:"hash"`
 	Timestamp  int64             `json:"timeStamp"`
-	Height     int32             `json:"height"`
+	Height     int32             `json:"Height"`
 	ParentHash string            `json:"parentHash"`
 	Size       int32             `json:"size"`
 	Nonce      string            `json:"nonce"`
@@ -71,6 +71,10 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	for k, v := range j.MPT {
 		m.Insert(k, v)
 	}
+	fmt.Println("b  height")
+	fmt.Println(b.Header.Height)
+	fmt.Println("j height")
+	fmt.Println(j.Height)
 	b.Header.Size = j.Size
 	b.Header.Hash = j.Hash
 	b.Header.ParentHash = j.ParentHash
@@ -79,6 +83,8 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.Nonce = j.Nonce
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
+	fmt.Println("b  height at end")
+	fmt.Println(b.Header.Height)
 	return b
 }
 
@@ -117,5 +123,9 @@ func deriveHash(height int32, timestamp int64, parentHash string, mpt p1.MerkleP
 	slice := sum[:]
 	hashString := hex.EncodeToString(slice)
 	return hashString
+}
+
+func (block *Block) GetMptRoot() string {
+	return block.Value.mpt.GetRoot()
 }
 

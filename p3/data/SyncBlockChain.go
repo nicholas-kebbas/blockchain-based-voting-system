@@ -57,11 +57,13 @@ func(sbc *SyncBlockChain) Insert(block p2.Block) {
 func(sbc *SyncBlockChain) CheckParentHash(insertBlock p2.Block) bool {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
-	fmt.Println("Entering sbc.bc.CheckForHash, checking for")
+	fmt.Println("Entering sbc.bc.CheckParentHash, checking for")
 	fmt.Println(insertBlock.Header.ParentHash)
 	if sbc.bc.CheckForHash(insertBlock.Header.ParentHash) {
+		fmt.Println("Parent Hash is found in CheckParentHash(). Returning True.")
 		return true
 	}
+	fmt.Println("Parent Hash is not found in CheckParentHash(). Returning False.")
 	return false
 }
 

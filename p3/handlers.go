@@ -31,6 +31,8 @@ var FIRST_NODE = "http://localhost:6688"
 var BC_DOWNLOAD_SERVER = FIRST_NODE + "/upload"
 var SELF_ADDR string
 var SELF_ADDR_FULL = "http://" + SELF_ADDR
+var VERIFIED = false
+var FOUNDREMOTE = false
 
 /* This is the canonical blockchain */
 var SBC data.SyncBlockChain
@@ -72,8 +74,9 @@ func Start(w http.ResponseWriter, r *http.Request) {
 		/* ID is now port number. Address is now correct Address */
 		ID = int32(i)
 		SELF_ADDR = r.Host
+		RandSeed()
 		/* Need to instantiate the peer list */
-		if len(Peers.GetPeerMap()) == 0 {
+		if len(Peers.Copy()) == 0 {
 			Peers = data.NewPeerList(ID, 32)
 		}
 
@@ -84,6 +87,7 @@ func Start(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println("Starting Heartbeat in", SELF_ADDR)
 		go StartHeartBeat()
+		go StartTryingNonces(5)
 		ifStarted = true
 	}
 }
@@ -94,23 +98,9 @@ func Show (w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n%s", Peers.Show(), SBC.Show())
 }
 
-// Register to TA's server, get an ID. Not needed anymore.
-func Register() {
-	//req, _ := http.NewRequest("GET", REGISTER_SERVER, nil)
-	//res, _ := http.DefaultClient.Do(req)
-	//defer res.Body.Close()
-	//body, _ := ioutil.ReadAll(res.Body)
-	//fmt.Println(string(body))
-	//i, err := strconv.ParseInt(string(body), 10, 32)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//ID = int32(i)
-}
-
 /* Create the initial canonical Blockchain and add write it to the server */
 func Create (w http.ResponseWriter, r *http.Request) {
-	/* Carefl this is an SBC */
+	/* This is an SBC */
 	newBlockChain := data.NewBlockChain()
 	mpt := p1.MerklePatriciaTrie{}
 	mpt.Initial()
@@ -157,11 +147,9 @@ func Download() {
 	// So Download makes a POST request to First Node Server/upload.
 	// Then the response will be HeartBeatdata (configure that in Upload())
 	jsonPeerList, _ := Peers.PeerMapToJson()
-	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR)
-	fmt.Println("Peer Map JSON")
-	fmt.Println(newHeartBeatData.HeartBeatToJson())
-	fmt.Println("SBC IN DOWNLOAD BEFORE REQUEST")
-	fmt.Println(SBC)
+	/* Just creating trie here so we can use the prepareHeartBeatData Function */
+	trie := p1.MerklePatriciaTrie{}
+	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, "", trie)
 	/* Need to figure out what to send here in the request */
 	res, _ := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
 	//res, _ := http.DefaultClient.Do(req)
@@ -261,8 +249,6 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 
-	/* TODO: May need to change where we rand.Seed() but doing it here for now */
-	RandSeed()
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
@@ -276,38 +262,40 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	/* Adding Sender to peer list as well as Sender's Peerlist */
 	Peers.Add(t.Addr, t.Id)
 	Peers.InjectPeerMapJson(t.PeerMapJson, SELF_ADDR)
-	/* Check if heartbeat contains new block */
+	/* So now, this is if we received a block and need to verify the nonce */
 	if t.IfNewBlock == true {
 		/* If it contains new block, check if our blockchain has parent */
 		newBlock := p2.Block{}
-		fmt.Println("Block JSON we're about to add to our chain")
-		fmt.Println(t.BlockJson)
-		/* Have to quote it? that causes an error too */
-		//testingString := strconv.Quote(t.BlockJson)
-		//fmt.Println(testingString)
 		newBlock = newBlock.DecodeFromJson(t.BlockJson)
 		fmt.Println("New Block Printed")
 		/* Decode from JSON not working. So this is where the problem is */
 		fmt.Println(newBlock)
-		/* Might need to lock here */
-		if SBC.CheckParentHash(newBlock) == false {
-			/* We do -1 because we need the parents height. But newblock header height is 0 right now, so this is wrong
-			newBlock.Header.ParentHash is also blank.
-			*/
-			fmt.Println("New change here. Doing -1 seems to be necessary")
-			AskForBlock(SBC.GetLength() - 1, newBlock.Header.ParentHash)
-			fmt.Println("Adding parent hash, should see Inserting new block next")
-		}
-		if SBC.CheckParentHash(newBlock) == true {
-			fmt.Println("Inserting new Block of Height")
-			fmt.Println(newBlock.Header.Height)
-			SBC.Insert(newBlock)
-			t.Hops = t.Hops - 1
-			/* If still greater than 1, forward on */
-			if t.Hops > 0 {
-				ForwardHeartBeat(t)
+		/* First verify the nonce, then do the other steps */
+		if VerifyNonceFromBlock(newBlock) {
+			FOUNDREMOTE = true
+			/* This keeps returning false when it shouldn't. We have the parent in most cases, so this func is wrong */
+			if SBC.CheckParentHash(newBlock) == false {
+				/* So we're looking for the parent here and adding it if we don't have it.*/
+				AskForBlock(newBlock.Header.Height - 1, newBlock.Header.ParentHash)
+				fmt.Println("Adding parent hash, should see Inserting new block next")
 			}
+			if SBC.CheckParentHash(newBlock) == true {
+				fmt.Println("Inserting new Block of Height")
+				fmt.Println(newBlock.Header.Height)
+				SBC.Insert(newBlock)
+				t.Hops = t.Hops - 1
+				/* If still greater than 1, forward on */
+				if t.Hops > 0 {
+					ForwardHeartBeat(t)
+				}
+			}
+			FOUNDREMOTE = false
+			/* Stop our own search for nonce and start it again with new parent */
+
+		} else {
+			fmt.Print("Block is not good")
 		}
+		/* Might need to lock here */
 	}
 }
 
@@ -333,10 +321,16 @@ func AskForBlock(height int32, hash string) {
 		if res.StatusCode == 204 {
 			fmt.Println("No content here")
 		} else if res.StatusCode == 200 {
-			fmt.Println("Found block!")
+			fmt.Println("Found remote block! In Ask For Block")
 			body, _ := ioutil.ReadAll(res.Body)
 			newBlock := p2.Block{}
+			/* Decode from Json must not be working correctly */
 			newBlock.DecodeFromJson(string(body))
+			fmt.Println(string(body))
+			fmt.Println("Printing New Block")
+			fmt.Println(string(body))
+			fmt.Println("Height")
+			fmt.Println(newBlock.Header.Height)
 			SBC.Insert(newBlock)
 			break
 		} else {
@@ -344,23 +338,16 @@ func AskForBlock(height int32, hash string) {
 		}
 		res.Body.Close()
 	}
-	// SBC.GetBlock(height, hash)
 }
 
 /* Send to all the peers. Will probably want to send a post request to their ReceiveHeartBeat */
 func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
-	fmt.Println("Forward Heart Beat.")
 	/* Need to rebalance before send. Makes the most sense to do it here */
 	Peers.Rebalance()
 	/* Get the peerMap */
 	localPeerMap := Peers.GetPeerMap()
-	for k,v := range localPeerMap {
+	for k, _ := range localPeerMap {
 		remoteAddress := "http://" + k + "/heartbeat/receive"
-		fmt.Println("remoteAddress")
-		fmt.Println(remoteAddress)
-		fmt.Println(v)
-		fmt.Println("Data Forwarding")
-		fmt.Println(heartBeatData.HeartBeatToJson())
 		resp, _ := http.Post(remoteAddress, "application/json; charset=UTF-8", strings.NewReader(heartBeatData.HeartBeatToJson()))
 		fmt.Println(resp)
 	}
@@ -368,13 +355,22 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 
 func StartHeartBeat() {
 	for range time.Tick(time.Second *7) {
-		fmt.Println("Heartbeat")
 		/* PrepareHeartBeatData() to create a HeartBeatData,
 		and send it to all peers in the local PeerMap */
 		stringJson, _ := Peers.PeerMapToJson()
-		newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR)
+		trie := p1.MerklePatriciaTrie{}
+		newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, false, "", trie)
 		ForwardHeartBeat(newHeartBeatData)
 	}
+}
+
+func SendBlock(nonce string, trie p1.MerklePatriciaTrie) {
+	fmt.Println("New Block Found! Sending")
+	/* PrepareHeartBeatData() to create a HeartBeatData,
+	and send it to all peers in the local PeerMap */
+	stringJson, _ := Peers.PeerMapToJson()
+	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, true, nonce, trie)
+	ForwardHeartBeat(newHeartBeatData)
 }
 
 /*
@@ -384,57 +380,74 @@ Initialize the rand when you start a new node with something unique about each n
 
  */
 func StartTryingNonces(n int) {
-	/* Start a while loop. */
-	verified := false
-	var i = 1
-	for i < 1000 {
-	nonce := CalculateNonce()
-	parentHash := ""
-	if SBC.GetLength() == 0 {
-		parentHash = "123456789"
-	} else {
-		parentBlock := SBC.GetLatestBlocks()[0]
-		parentHash = parentBlock.Header.Hash
-	}
-	mpt := GenerateRandomMpt()
-	str := parentHash + nonce + mpt.GetRoot()
-	hash := sha3.Sum256([]byte(str))
-	fmt.Print(hash)
-	/* Break the loop if verified */
-	firstN := string(hash[0:n])
-	var z = 0
-	for z = 0; z < len(firstN); z++ {
-		if string(firstN[z]) != "0" {
-			break
+	/* Start an outer while loop. This will need to run the whole time the node is active. */
+	for ok := true; ok; ok = true {
+		/* Get the latest block or one of the latest blocks to use as a parent block. */
+		parentHash := ""
+		if SBC.GetLength() == 0 {
+			parentHash = "Genesis"
+		} else {
+			parentBlock := SBC.GetLatestBlocks()[0]
+			parentHash = parentBlock.Header.Hash
 		}
-		verified = true
-	}
-	if verified {
-		fmt.Print("This is good")
-		i = 1000
-	}
-	}
-	/* Get the latest block or one of the latest blocks to use as a parent block. */
+		/* Create an MPT. */
+		mpt := GenerateRandomMpt()
 
-	/* Create an MPT. */
+		/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if
+			SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
+			Since we use one laptop to try different nonces, six to seven 0's could be enough.
+			If the nonce failed the verification, increment it by 1 and try the next nonce.
+			 */
+		var i= 1
+		for i < 1000 {
+			if FOUNDREMOTE == false {
+				nonce := CalculateNonce()
+				str := parentHash + nonce + mpt.GetRoot()
+				hash := sha3.Sum256([]byte(str))
+				/* Get first N digits of sha */
+				firstN := string(hash[:])
+				if strings.HasPrefix(firstN, "000") {
+					/* Create block, etc. */
+					i = 1000
+					/* Send the block to peers */
+					SendBlock(nonce, mpt)
+					/* Break out of loop and start working on next nonce */
+					break
+				}
+			} else {
+				/* Was found remotely so try next nonce now */
+				// fmt.Print("Block was found remotely. Breaking out of inner loop.")
+				break
+			}
+		}
 
-	/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
-	Since we use one laptop to try different nonces, six to seven 0's could be enough.
-	If the nonce failed the verification, increment it by 1 and try the next nonce.
-	 */
+		/* If a nonce is found and the next block is generated, forward that block to all peers with a HeartBeatData;
+		  In case we want to do that outside of loop*/
+		// fmt.Print("So find new Nonce now")
+		// FOUNDREMOTE = false
 
-	 /* If a nonce is found and the next block is generated, forward that block to all peers with an HeartBeatData;
-	  */
-
-	  /*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
-	  stop trying nonce on the current block, continue to the while loop by jumping to the step(2)
-	   */
+		/*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
+		  stop trying nonce on the current block, continue to the while loop by jumping to the step(2)
+		   */
+	} /* End outer while. This will never end. */
 }
 
 func CalculateNonce() string {
 	nonce := GenerateRandomString(8)
 	//sum := sha3.Sum256([]byte(str))
 	return  nonce
+}
+
+func VerifyNonceFromBlock(block p2.Block) bool {
+	verified := false
+	str := block.Header.ParentHash + block.Header.Nonce + block.GetMptRoot()
+	hash := sha3.Sum256([]byte(str))
+	/* Get first N digits of sha */
+	firstN := string(hash[:])
+	if strings.HasPrefix(firstN, "000") {
+		verified = true
+	}
+	return verified
 }
 
 func GenerateRandomString(length int) string {
