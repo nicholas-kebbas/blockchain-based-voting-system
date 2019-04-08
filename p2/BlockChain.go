@@ -49,12 +49,6 @@ func (blockchain *BlockChain) CheckForHash(hash string) bool {
 	for i = 1; i <= blockchain.Length; i++ {
 		fmt.Print("In outer for loop ")
 		for z := 0; z < len(blockchain.Get(i)); z++ {
-			fmt.Print("Hash: ")
-			fmt.Print(hash)
-			fmt.Print("Checking against ")
-			fmt.Print(blockchain.Get(i)[z])
-			fmt.Print("Checking against Header Hash ")
-			fmt.Print(blockchain.Get(i)[z].Header.Hash)
 			if blockchain.Get(i)[z].Header.Hash == hash {
 				fmt.Println("Found the hash")
 				return true

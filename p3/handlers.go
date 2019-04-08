@@ -12,12 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	//"github.com/gorilla/mux"
-	//"io"
 	"math/rand"
 	"net/http"
-	//"time"
 )
 
 /* DON'T NEED TO USE THIS ANYMORE */
@@ -42,6 +38,18 @@ var ID int32
 
 type JsonString struct {
 	JsonBody string
+}
+
+type CanonicalChain struct {
+	blocks []CanonicalChainBlock
+}
+
+type CanonicalChainBlock struct {
+	height int32
+	timestamp int64
+	hash string
+	parentHash string
+	size int32
 }
 
 
@@ -229,8 +237,64 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func Canonical(w http.ResponseWriter, r *http.Request) {
+/* Pretty Print the canonical chain */
 
+/*  If there's only one block at height 100, the chain of that block and all its predecessors
+(parent, parent of the parent, etc) is the canonical chain. */
+
+
+/* If there are multiple blocks at height 100, they are considered as forks, and each fork can form a chain.
+The canonical chain would be decided once one of the forks grows and that chain becomes the longest chain.  */
+func Canonical(w http.ResponseWriter, r *http.Request) {
+	/* First get latest blocks. If there are more than 1 here, that will mean there are
+	two equally long forks.
+	 */
+	var i = 0
+	latestBlocks := SBC.GetLatestBlocks()
+	canonicalChains := []CanonicalChain{}
+	for i = 0; i < len(latestBlocks); i++ {
+		canonicalChain := CanonicalChain{}
+		latestBlock := latestBlocks[i]
+		canonicalChain.writeInfoToCanonicalChain(latestBlock)
+		canonicalChains = append(canonicalChains, canonicalChain)
+	}
+
+	/* Then loop through, print their information or record to a data structure,
+	and do the same for parent.
+	*/
+	var z = 0
+	for i = 0; i < len(canonicalChains); i++ {
+		fmt.Fprint(w, "Chain: ", i + 1)
+		fmt.Fprint(w, "\n")
+		for z = 0; z < len(canonicalChains[i].blocks); z++ {
+			prettyBlock := fmt.Sprintf("%+v", canonicalChains[i].blocks[z])
+			prettyBlock = prettyBlock + "\n \n"
+			fmt.Fprint(w, prettyBlock)
+		}
+	}
+
+}
+
+func (canonicalChain *CanonicalChain)writeInfoToCanonicalChain(block p2.Block) {
+	if block.Header.Height == 1 {
+		chainBlock := CanonicalChainBlock{}
+		chainBlock.height = block.Header.Height
+		chainBlock.timestamp = block.Header.TimeStamp
+		chainBlock.hash = block.Header.Hash
+		chainBlock.parentHash = block.Header.ParentHash
+		chainBlock.size = block.Header.Size
+		canonicalChain.blocks = append(canonicalChain.blocks, chainBlock)
+		return
+	}
+	chainBlock := CanonicalChainBlock{}
+	chainBlock.height = block.Header.Height
+	chainBlock.timestamp = block.Header.TimeStamp
+	chainBlock.hash = block.Header.Hash
+	chainBlock.parentHash = block.Header.ParentHash
+	chainBlock.size = block.Header.Size
+	canonicalChain.blocks = append(canonicalChain.blocks, chainBlock)
+	parentBlock,_ := SBC.GetParentBlock(block)
+	canonicalChain.writeInfoToCanonicalChain(parentBlock)
 }
 
 /*  Received a heartbeat and follow these steps:
