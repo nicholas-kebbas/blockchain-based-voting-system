@@ -115,6 +115,7 @@ func (blockchain *BlockChain) Insert(block Block) {
 /**
 Function of the blockchain object. Turns itself into json representation. Returns String.
  */
+
 func (blockchain *BlockChain) EncodeToJSON() string {
 	jsonBlockArray := []JsonBlock{}
 	i := int32(0)
@@ -127,7 +128,7 @@ func (blockchain *BlockChain) EncodeToJSON() string {
 			jsonBlock2 := JsonBlock{}
 			err := json.Unmarshal(jsonBytes, &jsonBlock2)
 			if err != nil {
-				fmt.Println("Error")
+				fmt.Println("Error in BlockChain EncodeToJson()")
 			}
 			jsonBlockArray = append(jsonBlockArray, jsonBlock2)
 		}
@@ -146,8 +147,11 @@ func DecodeFromJSON(blockchain *BlockChain, jsonString string) {
 	b := Block{}
 	var jsonEncodedBlocks []JsonBlock
 	err := json.Unmarshal([]byte(jsonString), &jsonEncodedBlocks)
+	/* TODO: Fix error from start() here */
+	fmt.Println("String input")
+	fmt.Println(jsonString)
 	if err != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in Decode from JSON in Blockchain")
 	}
 	/** Loop through and turn jsonBlocks into blocks, then add blocks to chain **/
 	for i := range jsonEncodedBlocks {

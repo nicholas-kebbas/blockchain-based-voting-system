@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"golang.org/x/crypto/sha3"
+	"math/rand"
 )
 
 type Block struct {
@@ -19,7 +20,8 @@ type Header struct {
 	Height     int32 `json:"height"`
 	ParentHash string `json:"parentHash"`
 	Size       int32 `json:"size"`
-	Nonce      string `json:"nonce"`}
+	Nonce      string `json:"nonce"`
+}
 
 type Value struct {
 	mpt p1.MerklePatriciaTrie
@@ -62,8 +64,10 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b := Block{}
 	j := JsonBlock{}
 	err := json.Unmarshal(bytes, &j)
+	fmt.Println("JSON STRING")
+	fmt.Println(jsonString)
 	if err != nil {
-		fmt.Println("Error")
+		fmt.Println("Error in DecodeFromJson in Block")
 	}
 	/* Need to build the MPT to insert into block */
 	m := p1.MerklePatriciaTrie{}
@@ -80,6 +84,8 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.ParentHash = j.ParentHash
 	b.Header.TimeStamp = j.Timestamp
 	b.Header.Height = j.Height
+	fmt.Println("Nonce: ")
+	fmt.Println(j.Nonce)
 	b.Header.Nonce = j.Nonce
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
@@ -98,9 +104,12 @@ func (block *Block) EncodeToJSON() string {
 		Value
 	}{block.Header, block.Value})
 	if err != nil {
+		fmt.Println("Error in Encode to Json in Block")
 		fmt.Println(err)
 		return ""
 	}
+	fmt.Println("Encoded JSON String")
+	fmt.Println(encodedString)
 	return string(encodedString)
 }
 
@@ -127,5 +136,18 @@ func deriveHash(height int32, timestamp int64, parentHash string, mpt p1.MerkleP
 
 func (block *Block) GetMptRoot() string {
 	return block.Value.mpt.GetRoot()
+}
+
+func CalculateNonce() string {
+	nonce := GenerateRandomString(8)
+	return  nonce
+}
+
+func GenerateRandomString(length int) string {
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(bytes)
 }
 
