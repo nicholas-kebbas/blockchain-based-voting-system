@@ -138,9 +138,6 @@ func DecodeFromJSON(blockchain *BlockChain, jsonString string) {
 	b := Block{}
 	var jsonEncodedBlocks []JsonBlock
 	err := json.Unmarshal([]byte(jsonString), &jsonEncodedBlocks)
-	/* TODO: Fix error from start() here */
-	fmt.Println("String input")
-	fmt.Println(jsonString)
 	if err != nil {
 		fmt.Println("Error in Decode from JSON in Blockchain")
 	}
@@ -150,8 +147,6 @@ func DecodeFromJSON(blockchain *BlockChain, jsonString string) {
 		b = b.DecodeFromJson(string(jsonString))
 		blockchain.Insert(b)
 	}
-	fmt.Println("Decode From: ")
-	fmt.Println(blockchain)
 }
 
 func (jbc JsonBlockChain) String() string {

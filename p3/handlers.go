@@ -80,9 +80,8 @@ func Start(w http.ResponseWriter, r *http.Request) {
 			Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
 			Download()
 		}
-		fmt.Println("Starting Heartbeat in", SELF_ADDR)
 		go StartHeartBeat()
-		go StartTryingNonces(5)
+		go StartTryingNonces()
 		ifStarted = true
 	}
 }
@@ -102,7 +101,6 @@ func Create (w http.ResponseWriter, r *http.Request) {
 		mpt.Initial()
 		mpt.Insert("Initial", "Value")
 		newBlockChain.GenBlock(mpt)
-		fmt.Println(newBlockChain)
 		/* Set Global variable SBC to be this new blockchain */
 		SBC = newBlockChain
 		blockChainJson, _ := SBC.BlockChainToJson()
@@ -148,8 +146,6 @@ func Download() {
 	/* Instantiate and grab the blockchain */
 	SBC = data.NewBlockChain()
 	SBC.UpdateEntireBlockChain(string(body))
-	fmt.Println("SBC IN DOWNLOAD AFTER REQUEST")
-	fmt.Println(SBC)
 }
 
 // Called By Download (POST Request from local node's Download Function)
@@ -175,8 +171,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	Peers.Add(t.Addr, t.Id)
-	fmt.Println(t.Addr)
-	fmt.Println(t.Id)
 	/* Response should be the block chain and the peer list */
 	blockChainJson, err := SBC.BlockChainToJson()
 	if err != nil {
@@ -204,11 +198,9 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 
 	/* Found it so write the JSONblock to output */
 	if found == true {
-		fmt.Println("Block found in Upload Block")
 		w.WriteHeader(200)
 		fmt.Fprint(w, block.EncodeToJSON())
 	} else {
-		fmt.Println("Block not found in upload block")
 		w.WriteHeader(204)
 	}
 
@@ -309,9 +301,6 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 		/* If it contains new block, check if our blockchain has parent */
 		newBlock := p2.Block{}
 		newBlock = newBlock.DecodeFromJson(t.BlockJson)
-		fmt.Println("New Block Printed")
-		/* Decode from JSON not working. So this is where the problem is */
-		fmt.Println(newBlock)
 		/* First verify the nonce, then do the other steps */
 		if VerifyNonceFromBlock(newBlock) {
 			FOUNDREMOTE = true
@@ -319,11 +308,8 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 			if SBC.CheckParentHash(newBlock) == false {
 				/* So we're looking for the parent here and adding it if we don't have it.*/
 				AskForBlock(newBlock.Header.Height - 1, newBlock.Header.ParentHash)
-				fmt.Println("Adding parent hash, should see Inserting new block next")
 			}
 			if SBC.CheckParentHash(newBlock) == true {
-				fmt.Println("Inserting new Block of Height")
-				fmt.Println(newBlock.Header.Height)
 				SBC.Insert(newBlock)
 				t.Hops = t.Hops - 1
 				/* If still greater than 1, forward on */
@@ -348,8 +334,6 @@ func AskForBlock(height int32, hash string) {
 	}
 	for k, _ := range localPeerMap {
 		s := strconv.FormatInt(int64(height), 10)
-		fmt.Println(s)
-		fmt.Println(hash)
 		/* Calls Upload Block */
 		remoteAddress := "http://" + k + "/block/" + s + "/" + hash
 		/* Make a GET request to peer to see if the block is there */
@@ -358,12 +342,10 @@ func AskForBlock(height int32, hash string) {
 		defer res.Body.Close()
 		/* This means no block */
 		if res.StatusCode == 204 {
-			fmt.Println("No content here")
 			/* Recurse and Look for Parent Block if we can't find parent */
 			parentHeight := height - 1
 			AskForBlock(parentHeight, hash)
 		} else if res.StatusCode == 200 {
-			fmt.Println("Found remote block! In Ask For Block")
 			body, _ := ioutil.ReadAll(res.Body)
 			newBlock := p2.Block{}
 			/* Decode from Json must not be working correctly */
@@ -415,7 +397,7 @@ Nonce is a string of 16 hexes such as "1f7b169c846f218a".
 Initialize the rand when you start a new node with something unique about each node, such as the current time or the port number.
 
  */
-func StartTryingNonces(n int) {
+func StartTryingNonces() {
 	/* Start an outer while loop. This will need to run the whole time the node is active. */
 	for ok := true; ok; ok = true {
 		/* Get the latest block or one of the latest blocks to use as a parent block. */

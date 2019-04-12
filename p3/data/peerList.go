@@ -134,7 +134,6 @@ func(peers *PeerList) Rebalance() {
 /* Putting a lock here creates deadlock so don't do it */
 func(peers *PeerList) Show() string {
 	show, _ := peers.PeerMapToJson()
-	fmt.Println(show)
 	return show
 }
 
@@ -177,8 +176,6 @@ func(peers *PeerList) PeerMapToJson() (string, error) {
 
 /* Todo: Take peerMap as json String insert each entry into own peer list except for selfAddr */
 func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) {
-	fmt.Println("Peer Map JSON String")
-	fmt.Println(peerMapJsonStr)
 	var jsonMap map[string]int32
 	byteRep := []byte(peerMapJsonStr)
 	err := json.Unmarshal(byteRep, &jsonMap)
@@ -186,8 +183,6 @@ func(peers *PeerList) InjectPeerMapJson(peerMapJsonStr string, selfAddr string) 
 		fmt.Println("Error")
 	}
 	for k, v := range jsonMap {
-		fmt.Println("Self Address")
-		fmt.Println(selfAddr)
 		if k != selfAddr {
 			peers.Add(k, v)
 		}
