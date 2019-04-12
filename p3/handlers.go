@@ -1,7 +1,6 @@
 package p3
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
@@ -29,6 +28,7 @@ var SELF_ADDR string
 var SELF_ADDR_FULL = "http://" + SELF_ADDR
 var VERIFIED = false
 var FOUNDREMOTE = false
+var CREATED = false
 
 /* This is the canonical blockchain */
 var SBC data.SyncBlockChain
@@ -65,14 +65,8 @@ func init() {
 func Start(w http.ResponseWriter, r *http.Request) {
 	/* Get address and ID */
 	if ifStarted != true {
-		url := r.RequestURI
-		fmt.Println(url)
-		splitURL := strings.Split(url, "/")
-		fmt.Println(splitURL)
 		/* Get port number and set that to ID */
-		fmt.Println(r.Host)
 		/* Save localhost as Addr */
-		fmt.Println(r.URL.Path)
 		splitHostPort := strings.Split(r.Host, ":")
 		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
 		if err != nil {
@@ -109,41 +103,42 @@ func Show (w http.ResponseWriter, r *http.Request) {
 /* Create the initial canonical Blockchain and add write it to the server */
 func Create (w http.ResponseWriter, r *http.Request) {
 	/* This is an SBC */
-	newBlockChain := data.NewBlockChain()
-	mpt := p1.MerklePatriciaTrie{}
-	mpt.Initial()
-	mpt.Insert("Initial", "Value")
-	newBlockChain.GenBlock(mpt)
-	fmt.Println(newBlockChain)
-	/* Set Global variable SBC to be this new blockchain */
-	SBC = newBlockChain
-	blockChainJson, _ := SBC.BlockChainToJson()
-	fmt.Println(blockChainJson)
-	/* Write this to the server */
-	w.Write([]byte(blockChainJson))
+	if !CREATED {
+		newBlockChain := data.NewBlockChain()
+		mpt := p1.MerklePatriciaTrie{}
+		mpt.Initial()
+		mpt.Insert("Initial", "Value")
+		newBlockChain.GenBlock(mpt)
+		fmt.Println(newBlockChain)
+		/* Set Global variable SBC to be this new blockchain */
+		SBC = newBlockChain
+		blockChainJson, _ := SBC.BlockChainToJson()
+		/* Write this to the server */
+		w.Write([]byte(blockChainJson))
 
-
-	/* Do most of start. Just don't download because that would be downloading from self */
-	/* Get address and ID */
-	url := r.RequestURI
-	fmt.Println(url)
-	splitURL := strings.Split(url, "/")
-	fmt.Println(splitURL)
-	/* Get port number and set that to ID */
-	fmt.Println(r.Host)
-	/* Save localhost as Addr */
-	fmt.Println(r.URL.Path)
-	splitHostPort := strings.Split(r.Host, ":")
-	i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
-	if err != nil {
-		w.WriteHeader(500)
-		panic(err)
+		/* Do most of start. Just don't download because that would be downloading from self */
+		/* Get address and ID */
+		url := r.RequestURI
+		fmt.Println(url)
+		splitURL := strings.Split(url, "/")
+		fmt.Println(splitURL)
+		/* Get port number and set that to ID */
+		fmt.Println(r.Host)
+		/* Save localhost as Addr */
+		fmt.Println(r.URL.Path)
+		splitHostPort := strings.Split(r.Host, ":")
+		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+		if err != nil {
+			w.WriteHeader(500)
+			panic(err)
+		}
+		/* ID is now port number. Address is now correct Address */
+		ID = int32(i)
+		SELF_ADDR = r.Host
+		/* Need to instantiate the peer list */
+		Peers = data.NewPeerList(ID, 32)
+		CREATED = true
 	}
-	/* ID is now port number. Address is now correct Address */
-	ID = int32(i)
-	SELF_ADDR = r.Host
-	/* Need to instantiate the peer list */
-	Peers = data.NewPeerList(ID, 32)
 }
 
 // Download blockchain from First Node
@@ -157,17 +152,22 @@ func Download() {
 	jsonPeerList, _ := Peers.PeerMapToJson()
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	trie := p1.MerklePatriciaTrie{}
+	fmt.Println("About to prepare heartbeat")
 	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, "", trie)
 	/* Need to figure out what to send here in the request */
-	res, _ := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
+	res, err := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
+	if err != nil {
+		fmt.Println("Error in Download()")
+	}
 	//res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
+	fmt.Println("About to read body")
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
+	fmt.Println("Calling new blockchain")
 	SBC = data.NewBlockChain()
+	fmt.Println("Updating Entire Blockchain")
 	SBC.UpdateEntireBlockChain(string(body))
-	fmt.Println("SBC IN DOWNLOAD AFTER REQUEST")
-	fmt.Println(SBC)
 }
 
 // Called By Download (POST Request from local node's Download Function)
@@ -175,30 +175,31 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	/* Also store the ID and Address of the incoming request */
 	splitHostPort := strings.Split(r.Host, ":")
-	i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+	_, err := strconv.ParseInt(splitHostPort[1], 10, 32)
 	if err != nil {
-		fmt.Println(i)
+		fmt.Println("Status Code 500")
 		w.WriteHeader(500)
 		panic(err)
 	}
 
 	/* ID is now port number. Address is now correct Address */
+	fmt.Println("Reading body in upload")
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
-	s := string(body)
-	fmt.Println(s)
 	var t data.HeartBeatData
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Printing Body")
+	fmt.Println(string(body))
 	Peers.Add(t.Addr, t.Id)
-	fmt.Println(t.Addr)
-	fmt.Println(t.Id)
 	/* Response should be the block chain and the peer list */
 	blockChainJson, err := SBC.BlockChainToJson()
+	fmt.Println("Block chain JSON")
+	fmt.Println(blockChainJson)
 	if err != nil {
-		// data.PrintError(err, "Upload")
+		fmt.Fprint(w, "There was an error uploading block.")
 	}
 	fmt.Fprint(w, blockChainJson)
 }
@@ -207,12 +208,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 //  return HTTP 204: StatusNoContent; if there's an error, return HTTP 500: InternalServerError.
 func UploadBlock(w http.ResponseWriter, r *http.Request) {
 	url := r.RequestURI
-	fmt.Println("URL IN UPLOAD BLOCK")
-	fmt.Println(url)
 	splitURL := strings.Split(url, "/")
 	blockHeightString := splitURL[2]
-	fmt.Println("Block Height String")
-	fmt.Println(blockHeightString)
 	cleanHeight := strings.Replace(blockHeightString, "%0", "", 1)
 	cleanHeight = strings.Replace(blockHeightString, "%", "", 1)
 	blockHash := splitURL[3]
@@ -222,7 +219,6 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	blockHeight := int32(i)
-
 	block, found := SBC.GetBlock(blockHeight, blockHash)
 
 	/* Found it so write the JSONblock to output */
@@ -245,6 +241,8 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 
 /* If there are multiple blocks at height 100, they are considered as forks, and each fork can form a chain.
 The canonical chain would be decided once one of the forks grows and that chain becomes the longest chain.  */
+
+/* Todo: Figure out how to create a fork so we can test. */
 func Canonical(w http.ResponseWriter, r *http.Request) {
 	/* First get latest blocks. If there are more than 1 here, that will mean there are
 	two equally long forks.
@@ -262,20 +260,24 @@ func Canonical(w http.ResponseWriter, r *http.Request) {
 	/* Then loop through, print their information or record to a data structure,
 	and do the same for parent.
 	*/
+	output := ""
 	var z = 0
+
 	for i = 0; i < len(canonicalChains); i++ {
-		fmt.Fprint(w, "Chain: ", i + 1)
-		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, "Chain: ")
+		fmt.Fprintln(w, strconv.Itoa(i + 1))
 		for z = 0; z < len(canonicalChains[i].blocks); z++ {
-			prettyBlock := fmt.Sprintf("%+v", canonicalChains[i].blocks[z])
-			prettyBlock = prettyBlock + "\n \n"
-			fmt.Fprint(w, prettyBlock)
+			output = fmt.Sprintf("%+v", canonicalChains[i].blocks[z])
+			fmt.Fprintln(w, output)
 		}
 	}
 
+	/* Need this at end or else it strips out line breaks above*/
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 }
 
-func (canonicalChain *CanonicalChain)writeInfoToCanonicalChain(block p2.Block) {
+func (canonicalChain *CanonicalChain) writeInfoToCanonicalChain(block p2.Block) {
 	if block.Header.Height == 1 {
 		chainBlock := CanonicalChainBlock{}
 		chainBlock.height = block.Header.Height
@@ -316,8 +318,6 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
-	s := string(body)
-	fmt.Println(s)
 	var t data.HeartBeatData
 	err = json.Unmarshal(body, &t)
 	if err != nil {
@@ -352,26 +352,29 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 				if t.Hops > 0 {
 					ForwardHeartBeat(t)
 				}
+			} else {
+				/* If we still can't find it, make a fork all the way back to genesis? */
+
 			}
+			/* So now we may or may not have found it */
 			FOUNDREMOTE = false
 			/* Stop our own search for nonce and start it again with new parent */
 
 		} else {
 			fmt.Print("Block is not good")
 		}
-		/* Might need to lock here */
 	}
 }
 
 /* TODO: Update this function to recursively ask for all the missing predesessor blocks instead of only the parent block.  */
 func AskForBlock(height int32, hash string) {
 	fmt.Println("Asking for block")
-	localPeerMap := Peers.GetPeerMap()
+	localPeerMap := Peers.Copy()
+	if height == 0 {
+		fmt.Print("Parent Block not in chain")
+		return
+	}
 	for k, _ := range localPeerMap {
-		fmt.Println("Local peer map")
-		fmt.Println(k)
-		fmt.Println(height)
-		fmt.Println("string(height)")
 		s := strconv.FormatInt(int64(height), 10)
 		fmt.Println(s)
 		fmt.Println(hash)
@@ -384,13 +387,15 @@ func AskForBlock(height int32, hash string) {
 		/* This means no block */
 		if res.StatusCode == 204 {
 			fmt.Println("No content here")
+			/* Recurse and Look for Parent Block if we can't find parent */
+			parentHeight := height - 1
+			AskForBlock(parentHeight, hash)
 		} else if res.StatusCode == 200 {
 			fmt.Println("Found remote block! In Ask For Block")
 			body, _ := ioutil.ReadAll(res.Body)
 			newBlock := p2.Block{}
 			/* Decode from Json must not be working correctly */
 			newBlock.DecodeFromJson(string(body))
-			fmt.Println(string(body))
 			fmt.Println("Printing New Block")
 			fmt.Println(string(body))
 			fmt.Println("Height")
@@ -409,11 +414,10 @@ func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
 	/* Need to rebalance before send. Makes the most sense to do it here */
 	Peers.Rebalance()
 	/* Get the peerMap */
-	localPeerMap := Peers.GetPeerMap()
+	localPeerMap := Peers.Copy()
 	for k, _ := range localPeerMap {
 		remoteAddress := "http://" + k + "/heartbeat/receive"
-		resp, _ := http.Post(remoteAddress, "application/json; charset=UTF-8", strings.NewReader(heartBeatData.HeartBeatToJson()))
-		fmt.Println(resp)
+		http.Post(remoteAddress, "application/json; charset=UTF-8", strings.NewReader(heartBeatData.HeartBeatToJson()))
 	}
 }
 
@@ -465,7 +469,7 @@ func StartTryingNonces(n int) {
 		var i= 1
 		for i < 1000 {
 			if FOUNDREMOTE == false {
-				nonce := CalculateNonce()
+				nonce := p2.CalculateNonce()
 				str := parentHash + nonce + mpt.GetRoot()
 				hash := sha3.Sum256([]byte(str))
 				/* Get first N digits of sha */
@@ -480,14 +484,12 @@ func StartTryingNonces(n int) {
 				}
 			} else {
 				/* Was found remotely so try next nonce now */
-				// fmt.Print("Block was found remotely. Breaking out of inner loop.")
 				break
 			}
 		}
 
 		/* If a nonce is found and the next block is generated, forward that block to all peers with a HeartBeatData;
 		  In case we want to do that outside of loop*/
-		// fmt.Print("So find new Nonce now")
 		// FOUNDREMOTE = false
 
 		/*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
@@ -496,11 +498,6 @@ func StartTryingNonces(n int) {
 	} /* End outer while. This will never end. */
 }
 
-func CalculateNonce() string {
-	nonce := GenerateRandomString(8)
-	//sum := sha3.Sum256([]byte(str))
-	return  nonce
-}
 
 func VerifyNonceFromBlock(block p2.Block) bool {
 	verified := false
@@ -512,14 +509,6 @@ func VerifyNonceFromBlock(block p2.Block) bool {
 		verified = true
 	}
 	return verified
-}
-
-func GenerateRandomString(length int) string {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return ""
-	}
-	return hex.EncodeToString(bytes)
 }
 
 func GenerateRandomMpt() p1.MerklePatriciaTrie {
