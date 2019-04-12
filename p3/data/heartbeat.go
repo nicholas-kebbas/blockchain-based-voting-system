@@ -3,7 +3,6 @@ package data
 import (
 	"encoding/json"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
-	"math/rand"
 )
 
 /* Heartbeat is the JSON representation of the data we need to send to the other blockchains
@@ -48,8 +47,4 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 func (heartbeat *HeartBeatData) HeartBeatToJson() string {
 	jsonHeartBeat, _ := json.Marshal(heartbeat)
 	return string(jsonHeartBeat)
-}
-
-func rand2() bool {
-	return rand.Int31()&0x01 == 0
 }

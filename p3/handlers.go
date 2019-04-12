@@ -220,10 +220,8 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 (parent, parent of the parent, etc) is the canonical chain. */
 
 
-/* If there are multiple blocks at height 100, they are considered as forks, and each fork can form a chain.
+/* If there are multiple blocks at max height n, they are considered as forks, and each fork can form a chain.
 The canonical chain would be decided once one of the forks grows and that chain becomes the longest chain.  */
-
-/* Todo: Figure out how to create a fork so we can test. */
 func Canonical(w http.ResponseWriter, r *http.Request) {
 	/* First get latest blocks. If there are more than 1 here, that will mean there are
 	two equally long forks.
@@ -243,7 +241,6 @@ func Canonical(w http.ResponseWriter, r *http.Request) {
 	*/
 	output := ""
 	var z = 0
-
 	for i = 0; i < len(canonicalChains); i++ {
 		fmt.Fprint(w, "Chain: ")
 		fmt.Fprintln(w, strconv.Itoa(i + 1))
@@ -253,7 +250,7 @@ func Canonical(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	/* Need this at end or else it strips out line breaks above*/
+	/* Need this at end or else golang/browser strips out line breaks */
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 }
@@ -333,23 +330,17 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 				if t.Hops > 0 {
 					ForwardHeartBeat(t)
 				}
-			} else {
-				/* If we still can't find it, make a fork all the way back to genesis? */
-
 			}
 			/* So now we may or may not have found it */
 			FOUNDREMOTE = false
 			/* Stop our own search for nonce and start it again with new parent */
 
-		} else {
-			fmt.Print("Block is not good")
 		}
 	}
 }
 
-/* TODO: Update this function to recursively ask for all the missing predesessor blocks instead of only the parent block.  */
+/* Function recursively asks for all the missing predecessor blocks instead of only the parent block.  */
 func AskForBlock(height int32, hash string) {
-	fmt.Println("Asking for block")
 	localPeerMap := Peers.Copy()
 	if height == 0 {
 		fmt.Print("Parent Block not in chain")
@@ -377,10 +368,6 @@ func AskForBlock(height int32, hash string) {
 			newBlock := p2.Block{}
 			/* Decode from Json must not be working correctly */
 			newBlock.DecodeFromJson(string(body))
-			fmt.Println("Printing New Block")
-			fmt.Println(string(body))
-			fmt.Println("Height")
-			fmt.Println(newBlock.Header.Height)
 			SBC.Insert(newBlock)
 			break
 		} else {
@@ -470,13 +457,12 @@ func StartTryingNonces(n int) {
 		}
 
 		/* If a nonce is found and the next block is generated, forward that block to all peers with a HeartBeatData;
-		  In case we want to do that outside of loop*/
-		// FOUNDREMOTE = false
+		  In case we want to do that outside of loop */
 
 		/*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
 		  stop trying nonce on the current block, continue to the while loop by jumping to the step(2)
 		   */
-	} /* End outer while. This will never end. */
+	} /* End outer while. This will never end unless node is stopped. */
 }
 
 
