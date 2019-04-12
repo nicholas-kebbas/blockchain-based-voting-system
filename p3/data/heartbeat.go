@@ -37,7 +37,6 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		/* This is adding to own fine. Maybe overwriting parent */
 		newBlock := sbc.GenBlock(trie)
 		newBlock.Header.Nonce = nonce
-		/* TODO: Fix error here */
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData
 	} else {

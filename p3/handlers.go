@@ -15,9 +15,6 @@ import (
 	"net/http"
 )
 
-/* DON'T NEED TO USE THIS ANYMORE */
-var TA_SERVER = "http://localhost:9000"
-var REGISTER_SERVER = TA_SERVER + "/peer"
 // First node will have the canonical block chain on it. It will first create the blockchain, and
 // the other nodes will listen for it.
 var FIRST_NODE_ADDRESS = "localhost:6688"
@@ -25,8 +22,6 @@ var FIRST_NODE_PORT int32 = 6688
 var FIRST_NODE = "http://localhost:6688"
 var BC_DOWNLOAD_SERVER = FIRST_NODE + "/upload"
 var SELF_ADDR string
-var SELF_ADDR_FULL = "http://" + SELF_ADDR
-var VERIFIED = false
 var FOUNDREMOTE = false
 var CREATED = false
 
@@ -65,8 +60,6 @@ func init() {
 func Start(w http.ResponseWriter, r *http.Request) {
 	/* Get address and ID */
 	if ifStarted != true {
-		/* Get port number and set that to ID */
-		/* Save localhost as Addr */
 		splitHostPort := strings.Split(r.Host, ":")
 		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
 		if err != nil {
@@ -103,7 +96,7 @@ func Show (w http.ResponseWriter, r *http.Request) {
 /* Create the initial canonical Blockchain and add write it to the server */
 func Create (w http.ResponseWriter, r *http.Request) {
 	/* This is an SBC */
-	if !CREATED {
+	if CREATED == false {
 		newBlockChain := data.NewBlockChain()
 		mpt := p1.MerklePatriciaTrie{}
 		mpt.Initial()
@@ -152,22 +145,17 @@ func Download() {
 	jsonPeerList, _ := Peers.PeerMapToJson()
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	trie := p1.MerklePatriciaTrie{}
-	fmt.Println("About to prepare heartbeat")
 	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, "", trie)
 	/* Need to figure out what to send here in the request */
-	res, err := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
-	if err != nil {
-		fmt.Println("Error in Download()")
-	}
+	res, _ := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
 	//res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
-	fmt.Println("About to read body")
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
-	fmt.Println("Calling new blockchain")
 	SBC = data.NewBlockChain()
-	fmt.Println("Updating Entire Blockchain")
 	SBC.UpdateEntireBlockChain(string(body))
+	fmt.Println("SBC IN DOWNLOAD AFTER REQUEST")
+	fmt.Println(SBC)
 }
 
 // Called By Download (POST Request from local node's Download Function)
@@ -175,31 +163,30 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	/* Also store the ID and Address of the incoming request */
 	splitHostPort := strings.Split(r.Host, ":")
-	_, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+	i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
 	if err != nil {
-		fmt.Println("Status Code 500")
+		fmt.Println(i)
 		w.WriteHeader(500)
 		panic(err)
 	}
 
 	/* ID is now port number. Address is now correct Address */
-	fmt.Println("Reading body in upload")
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
+	s := string(body)
+	fmt.Println(s)
 	var t data.HeartBeatData
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Printing Body")
-	fmt.Println(string(body))
 	Peers.Add(t.Addr, t.Id)
+	fmt.Println(t.Addr)
+	fmt.Println(t.Id)
 	/* Response should be the block chain and the peer list */
 	blockChainJson, err := SBC.BlockChainToJson()
-	fmt.Println("Block chain JSON")
-	fmt.Println(blockChainJson)
 	if err != nil {
-		fmt.Fprint(w, "There was an error uploading block.")
+		// data.PrintError(err, "Upload")
 	}
 	fmt.Fprint(w, blockChainJson)
 }

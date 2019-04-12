@@ -49,7 +49,6 @@ func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatr
 	hash := deriveHash(height, timestamp, parentHash, mpt)
 	size := len([]byte(fmt.Sprintf("%v", mpt)))
 	size32 := int32(size)
-	/* TODO: Change Nonce */
 	nonce := ""
 	newHeader := Header{hash, timestamp, height, parentHash, size32, nonce}
 	newValue := Value{mpt, mpt.GetStringDb()}
@@ -64,8 +63,6 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b := Block{}
 	j := JsonBlock{}
 	err := json.Unmarshal(bytes, &j)
-	fmt.Println("JSON STRING")
-	fmt.Println(jsonString)
 	if err != nil {
 		fmt.Println("Error in DecodeFromJson in Block")
 	}
@@ -75,22 +72,14 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	for k, v := range j.MPT {
 		m.Insert(k, v)
 	}
-	fmt.Println("b  height")
-	fmt.Println(b.Header.Height)
-	fmt.Println("j height")
-	fmt.Println(j.Height)
 	b.Header.Size = j.Size
 	b.Header.Hash = j.Hash
 	b.Header.ParentHash = j.ParentHash
 	b.Header.TimeStamp = j.Timestamp
 	b.Header.Height = j.Height
-	fmt.Println("Nonce: ")
-	fmt.Println(j.Nonce)
 	b.Header.Nonce = j.Nonce
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
-	fmt.Println("b  height at end")
-	fmt.Println(b.Header.Height)
 	return b
 }
 
@@ -108,8 +97,6 @@ func (block *Block) EncodeToJSON() string {
 		fmt.Println(err)
 		return ""
 	}
-	fmt.Println("Encoded JSON String")
-	fmt.Println(encodedString)
 	return string(encodedString)
 }
 

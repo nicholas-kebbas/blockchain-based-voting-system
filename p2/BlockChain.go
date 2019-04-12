@@ -42,20 +42,14 @@ func (blockchain *BlockChain) Get(height int32) []Block {
 
 /* Check if hash exists in blockchain */
 func (blockchain *BlockChain) CheckForHash(hash string) bool {
-	fmt.Println("length in blockchain check for hash")
-	fmt.Println(blockchain.Length)
 	var i int32 = 0
-	/* This might need to start at 1 since the blockchain starts at 1. There's nothing at 0 ever */
 	for i = 1; i <= blockchain.Length; i++ {
-		fmt.Print("In outer for loop ")
 		for z := 0; z < len(blockchain.Get(i)); z++ {
 			if blockchain.Get(i)[z].Header.Hash == hash {
-				fmt.Println("Found the hash")
 				return true
 			}
 		}
 	}
-	fmt.Println("Can't find the parent in Blockchain CheckforHash()")
 	return false
 }
 
@@ -91,7 +85,6 @@ func (blockchain *BlockChain) Insert(block Block) {
 		blockIterator := blockchain.Chain[i]
 		for _, b := range blockIterator {
 			if block.Header.Hash == b.Header.Hash {
-				fmt.Println("Duplicate Block")
 				return
 			}
 		}
@@ -99,8 +92,6 @@ func (blockchain *BlockChain) Insert(block Block) {
 	/* else it's not in the chain, so add it and adjust BC Length */
 
 	/* Need to get height of block being entered */
-	fmt.Println("Height in Blockchain Insert")
-	fmt.Println(block.Header.Height)
 	blockArray := blockchain.Chain[block.Header.Height]
 	blockArray = append(blockArray, block)
 

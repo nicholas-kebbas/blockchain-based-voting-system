@@ -68,7 +68,6 @@ func(sbc *SyncBlockChain) UpdateEntireBlockChain(blockChainJson string) {
 	p2.DecodeFromJSON(&sbc.bc, blockChainJson)
 }
 
-/* TODO: Fix error handling on this one */
 func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
@@ -84,7 +83,7 @@ func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	if height == 0 {
 		sbc.bc = p2.NewBlockChain()
 		newBlock := p2.Initial(1, 123, "Genesis", mpt)
-		//newBlock.Header.Nonce = p2.CalculateNonce()
+		newBlock.Header.Nonce = p2.CalculateNonce()
 		sbc.bc.Insert(newBlock)
 		return newBlock
 	}
