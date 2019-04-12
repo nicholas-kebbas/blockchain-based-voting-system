@@ -111,14 +111,8 @@ func Create (w http.ResponseWriter, r *http.Request) {
 
 		/* Do most of start. Just don't download because that would be downloading from self */
 		/* Get address and ID */
-		url := r.RequestURI
-		fmt.Println(url)
-		splitURL := strings.Split(url, "/")
-		fmt.Println(splitURL)
 		/* Get port number and set that to ID */
-		fmt.Println(r.Host)
 		/* Save localhost as Addr */
-		fmt.Println(r.URL.Path)
 		splitHostPort := strings.Split(r.Host, ":")
 		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
 		if err != nil {
