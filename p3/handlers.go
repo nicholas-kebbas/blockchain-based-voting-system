@@ -24,6 +24,24 @@ var BC_DOWNLOAD_SERVER = FIRST_NODE + "/upload"
 var SELF_ADDR string
 var FOUNDREMOTE = false
 var CREATED = false
+/* Adding permissioning to blockchain */
+
+/* For simplicity's sake, this can just be the Port Numbers since we're collecting that info already.
+
+In production, we can actually keep a seperate list of predetermined allowed IDs
+ */
+
+ /* Only these IDs are allowed to write */
+var ALLOWED_IDS = map[int32]bool{
+	6688:true,
+	6669:true,
+	6670:true,
+}
+
+/* Need to check this ID whenever write attempts are made
+
+So upon create
+ */
 
 /* This is the canonical blockchain */
 var SBC data.SyncBlockChain
@@ -58,31 +76,34 @@ func init() {
 
 // Register ID, download BlockChain, start HeartBeat
 func Start(w http.ResponseWriter, r *http.Request) {
-	/* Get address and ID */
-	if ifStarted != true {
-		splitHostPort := strings.Split(r.Host, ":")
-		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
-		if err != nil {
-			w.WriteHeader(500)
-			panic(err)
-		}
-		/* ID is now port number. Address is now correct Address */
-		ID = int32(i)
-		SELF_ADDR = r.Host
-		RandSeed()
-		/* Need to instantiate the peer list */
-		if len(Peers.Copy()) == 0 {
-			Peers = data.NewPeerList(ID, 32)
-		}
+	/* Check if node is in set of Allowed IDs */
+	if _, ok := ALLOWED_IDS[ID]; ok {
+		/* Get address and ID */
+		if ifStarted != true {
+			splitHostPort := strings.Split(r.Host, ":")
+			i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+			if err != nil {
+				w.WriteHeader(500)
+				panic(err)
+			}
+			/* ID is now port number. Address is now correct Address */
+			ID = int32(i)
+			SELF_ADDR = r.Host
+			RandSeed()
+			/* Need to instantiate the peer list */
+			if len(Peers.Copy()) == 0 {
+				Peers = data.NewPeerList(ID, 32)
+			}
 
-		/* Need to also add the first node that we're connecting to, as long as this isn't Node 1 */
-		if SELF_ADDR != FIRST_NODE_ADDRESS {
-			Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
-			Download()
+			/* Need to also add the first node that we're connecting to, as long as this isn't Node 1 */
+			if SELF_ADDR != FIRST_NODE_ADDRESS {
+				Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
+				Download()
+			}
+			go StartHeartBeat()
+			go StartTryingNonces()
+			ifStarted = true
 		}
-		go StartHeartBeat()
-		go StartTryingNonces()
-		ifStarted = true
 	}
 }
 
@@ -96,17 +117,8 @@ func Show (w http.ResponseWriter, r *http.Request) {
 func Create (w http.ResponseWriter, r *http.Request) {
 	/* This is an SBC */
 	if CREATED == false {
-		newBlockChain := data.NewBlockChain()
-		mpt := p1.MerklePatriciaTrie{}
-		mpt.Initial()
-		mpt.Insert("Initial", "Value")
-		newBlockChain.GenBlock(mpt)
-		/* Set Global variable SBC to be this new blockchain */
-		SBC = newBlockChain
-		blockChainJson, _ := SBC.BlockChainToJson()
-		/* Write this to the server */
-		w.Write([]byte(blockChainJson))
 
+		/* Move the checking of ID up first to confirm this is allowed */
 		/* Do most of start. Just don't download because that would be downloading from self */
 		/* Get address and ID */
 		/* Get port number and set that to ID */
@@ -120,9 +132,23 @@ func Create (w http.ResponseWriter, r *http.Request) {
 		/* ID is now port number. Address is now correct Address */
 		ID = int32(i)
 		SELF_ADDR = r.Host
-		/* Need to instantiate the peer list */
-		Peers = data.NewPeerList(ID, 32)
-		CREATED = true
+		/* Check if ID is allowed in ALLOWED_IDs */
+		if _, ok := ALLOWED_IDS[ID]; ok {
+			newBlockChain := data.NewBlockChain()
+			mpt := p1.MerklePatriciaTrie{}
+			mpt.Initial()
+			mpt.Insert("Initial", "Value")
+			newBlockChain.GenBlock(mpt)
+			/* Set Global variable SBC to be this new blockchain */
+			SBC = newBlockChain
+			blockChainJson, _ := SBC.BlockChainToJson()
+			/* Write this to the server */
+			w.Write([]byte(blockChainJson))
+
+			/* Need to instantiate the peer list */
+			Peers = data.NewPeerList(ID, 32)
+			CREATED = true
+		}
 	}
 }
 
