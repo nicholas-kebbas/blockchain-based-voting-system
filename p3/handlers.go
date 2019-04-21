@@ -1,13 +1,16 @@
 package p3
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/sha3"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +23,8 @@ import (
 var FIRST_NODE_ADDRESS = "localhost:6688"
 var FIRST_NODE_PORT int32 = 6688
 var FIRST_NODE = "http://localhost:6688"
-var BC_DOWNLOAD_SERVER = FIRST_NODE + "/upload"
+var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
+var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
 var FOUNDREMOTE = false
 var CREATED = false
@@ -48,6 +52,7 @@ var SBC data.SyncBlockChain
 var Peers data.PeerList
 var ifStarted bool
 var ID int32
+var BALLOT voting.Ballot
 
 type JsonString struct {
 	JsonBody string
@@ -100,6 +105,7 @@ func Start(w http.ResponseWriter, r *http.Request) {
 				Peers.Add(FIRST_NODE_ADDRESS, FIRST_NODE_PORT)
 				Download()
 			}
+			/* Call down the voting ballot */
 			go StartHeartBeat()
 			go StartTryingNonces()
 			ifStarted = true
@@ -165,7 +171,7 @@ func Download() {
 	trie := p1.MerklePatriciaTrie{}
 	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, "", trie)
 	/* Need to figure out what to send here in the request */
-	res, _ := http.Post(BC_DOWNLOAD_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
+	res, _ := http.Post(FIRST_NODE_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
 	//res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -203,6 +209,31 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		// data.PrintError(err, "Upload")
 	}
 	fmt.Fprint(w, blockChainJson)
+}
+
+/* Download the uploaded ballot from other Nodes */
+func DownloadBallot() {
+	/* Just creating trie here so we can use the prepareHeartBeatData Function */
+	/* Need to figure out what to send here in the request */
+	res, _ := http.Post(FIRST_NODE_BALLOT, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
+	//res, _ := http.DefaultClient.Do(req)
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+	/* Instantiate and grab the blockchain */
+	SBC.UpdateEntireBlockChain(string(body))
+}
+
+/* POST the contents of the ballot so other nodes can download. Read from ballot.json */
+func UploadBallot(w http.ResponseWriter, r *http.Request) {
+	/* Read the JSON File */
+	plan, _ := ioutil.ReadFile("ballot.json")
+	var data interface{}
+	err := json.Unmarshal(plan, &data)
+	if err != nil {
+		fmt.Println("Error")
+	}
+	fmt.Fprint(w, plan)
+	fmt.Println(plan)
 }
 
 //  If you have the block, return the JSON string of the specific block; if you don't have the block,
@@ -489,10 +520,23 @@ func VerifyNonceFromBlock(block p2.Block) bool {
 func GenerateRandomMpt() p1.MerklePatriciaTrie {
 	mpt := p1.MerklePatriciaTrie{}
 	mpt.Initial()
-	randomInt := rand.Int()
-	key := "nick" + strconv.Itoa(randomInt)
-	value := "kebbas" + strconv.Itoa(randomInt)
-	mpt.Insert(key, value)
+	scanner := bufio.NewScanner(os.Stdin)
+	var text string
+	for text != "q" {  // break the loop if text == "q"
+		fmt.Print("Enter your Vote: ")
+		scanner.Scan()
+		text = scanner.Text()
+		if text != "q" {
+			fmt.Println("You voted for ", text)
+		}
+	}
+	fmt.Println("Thanks for voting!")
+	/* Record the Vote in the MPT. Value can be vote value, but need to decide what the key is */
+	mpt.Insert(text, text)
+
+	if scanner.Err() != nil {
+		// handle error.
+	}
 	return mpt
 }
 
