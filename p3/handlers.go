@@ -26,6 +26,7 @@ var FIRST_NODE = "http://localhost:6688"
 var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
 var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
+var PRIVATE_KEY string
 var FOUNDREMOTE = false
 var CREATED = false
 /* Adding permissioning to blockchain */
@@ -35,16 +36,14 @@ var CREATED = false
 In production, we can actually keep a seperate list of predetermined allowed IDs
  */
 
- /* Only these IDs are allowed to write */
+ /* Only these IDs are allowed to write. This gives the semblance of a permissioned blockchain */
 var ALLOWED_IDS = map[int32]bool{
 	6688:true,
 	6669:true,
 	6670:true,
 }
 
-/* Need to check this ID whenever write attempts are made
-
-So upon create
+/* Need to check this ID whenever write attempts are made, i.e. upon creation.
  */
 
 /* This is the canonical blockchain */
@@ -212,15 +211,16 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 /* Download the uploaded ballot from other Nodes */
-func DownloadBallot() {
+func DownloadBallot(w http.ResponseWriter, r *http.Request) {
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	/* Need to figure out what to send here in the request */
-	res, _ := http.Post(FIRST_NODE_BALLOT, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
+	res, _ := http.Get(FIRST_NODE_BALLOT)
 	//res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
-	SBC.UpdateEntireBlockChain(string(body))
+	fmt.Fprint(w, body)
+	fmt.Println(body)
 }
 
 /* POST the contents of the ballot so other nodes can download. Read from ballot.json */
