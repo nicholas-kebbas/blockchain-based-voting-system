@@ -2,6 +2,8 @@ package p3
 
 import (
 	"bufio"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"encoding/json"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
@@ -9,6 +11,7 @@ import (
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/sha3"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -27,7 +30,7 @@ var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
 var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
 /* Need to introduce a private key so we can properly do signatures */
-var PRIVATE_KEY string
+var PRIVATE_KEY ecdsa.PrivateKey
 var FOUNDREMOTE = false
 var CREATED = false
 /* Adding permissioning to blockchain */
@@ -76,6 +79,9 @@ type CanonicalChainBlock struct {
 */
 func init() {
 	ifStarted = false
+	/* Public and Private Key need to be created upon Node initialization */
+	/* Need to generate a Curve first with the elliptic library, then generate key based on that curve */
+	GeneratePrivateKey()
 }
 
 // Register ID, download BlockChain, start HeartBeat
@@ -519,20 +525,28 @@ func VerifyNonceFromBlock(block p2.Block) bool {
 }
 
 /* Need to implement basic signatures first. Generate a signature based on contents of
-the transaction and the private key.  Must take Block as input to get the MPT.
+the transaction and the private key.  Must take Hash of Block as input.
 */
-func CreateSignature() string {
-	ringSignature := ""
 
+func CreateSignature(hash string) string {
+	signature := ""
+	ecdsa.Sign()
 
-	return ringSignature
+	return signature
 
 }
+
+func GeneratePrivateKey() {
+	c := elliptic.P256()
+	/* TODO: Figure out why we need to use io.Reader type */
+	var reader io.Reader
+	&PRIVATE_KEY, _ = ecdsa.GenerateKey(c, reader)
+}
+
 
 /* Merges transaction with other transactions on the chain to maintain anonymity */
 func RingSignature() string {
 	ringSignature := ""
-
 
 	return ringSignature
 
