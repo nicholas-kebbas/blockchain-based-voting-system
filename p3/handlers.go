@@ -10,12 +10,12 @@ import (
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/sha3"
 	"io/ioutil"
+	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
-	"net/http"
 )
 
 // First node will have the canonical block chain on it. It will first create the blockchain, and
@@ -26,6 +26,7 @@ var FIRST_NODE = "http://localhost:6688"
 var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
 var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
+/* Need to introduce a private key so we can properly do signatures */
 var PRIVATE_KEY string
 var FOUNDREMOTE = false
 var CREATED = false
@@ -33,11 +34,10 @@ var CREATED = false
 
 /* For simplicity's sake, this can just be the Port Numbers since we're collecting that info already.
 
-In production, we can actually keep a seperate list of predetermined allowed IDs
- */
+In production, we can actually keep a seperate list of predetermined allowed (Public?) IDs */
 
  /* Only these IDs are allowed to write. This gives the semblance of a permissioned blockchain */
-var ALLOWED_IDS = map[int32]bool{
+var ALLOWED_IDS = map[int32]bool {
 	6688:true,
 	6669:true,
 	6670:true,
@@ -122,7 +122,6 @@ func Show (w http.ResponseWriter, r *http.Request) {
 func Create (w http.ResponseWriter, r *http.Request) {
 	/* This is an SBC */
 	if CREATED == false {
-
 		/* Move the checking of ID up first to confirm this is allowed */
 		/* Do most of start. Just don't download because that would be downloading from self */
 		/* Get address and ID */
@@ -146,6 +145,8 @@ func Create (w http.ResponseWriter, r *http.Request) {
 			newBlockChain.GenBlock(mpt)
 			/* Set Global variable SBC to be this new blockchain */
 			SBC = newBlockChain
+			/* Generate Multiple Blocks Initially */
+				
 			blockChainJson, _ := SBC.BlockChainToJson()
 			/* Write this to the server */
 			w.Write([]byte(blockChainJson))
@@ -515,6 +516,26 @@ func VerifyNonceFromBlock(block p2.Block) bool {
 		verified = true
 	}
 	return verified
+}
+
+/* Need to implement basic signatures first. Generate a signature based on contents of
+the transaction and the private key.  Must take Block as input to get the MPT.
+*/
+func CreateSignature() string {
+	ringSignature := ""
+
+
+	return ringSignature
+
+}
+
+/* Merges transaction with other transactions on the chain to maintain anonymity */
+func RingSignature() string {
+	ringSignature := ""
+
+
+	return ringSignature
+
 }
 
 func GenerateRandomMpt() p1.MerklePatriciaTrie {
