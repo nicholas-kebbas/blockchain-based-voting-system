@@ -3,16 +3,19 @@ package p3
 import (
 	"bufio"
 	"crypto/ecdsa"
-	"crypto/elliptic"
+	"crypto/md5"
+	crand "crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/sha3"
-	"io"
+	"hash"
 	"io/ioutil"
+	"math/big"
 	"math/rand"
 	"net/http"
 	"os"
@@ -30,7 +33,9 @@ var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
 var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
 /* Need to introduce a private key so we can properly do signatures */
-var PRIVATE_KEY ecdsa.PrivateKey
+var PRIVATE_KEY = new(ecdsa.PrivateKey)
+var PUBLIC_KEY = ecdsa.PublicKey{}
+var SIGNATURE = []byte{}
 var FOUNDREMOTE = false
 var CREATED = false
 /* Adding permissioning to blockchain */
@@ -81,7 +86,8 @@ func init() {
 	ifStarted = false
 	/* Public and Private Key need to be created upon Node initialization */
 	/* Need to generate a Curve first with the elliptic library, then generate key based on that curve */
-	GeneratePrivateKey()
+	GeneratePublicAndPrivateKey()
+
 }
 
 // Register ID, download BlockChain, start HeartBeat
@@ -528,20 +534,42 @@ func VerifyNonceFromBlock(block p2.Block) bool {
 the transaction and the private key.  Must take Hash of Block as input.
 */
 
-func CreateSignature(hash string) string {
-	signature := ""
-	ecdsa.Sign()
+func CreateSignature() {
+	var h hash.Hash
+	h = md5.New()
+	r := big.NewInt(0)
+	s := big.NewInt(0)
+	serr := errors.New("Error")
+	signhash := h.Sum(nil)
+	/* Returns Big Ints r and s
+	I think together those are the signature?
+	*/
+	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, signhash)
+	if serr != nil {
+		fmt.Println("Error")
+		os.Exit(1)
+	}
 
-	return signature
+	SIGNATURE = r.Bytes()
+	SIGNATURE = append(SIGNATURE, s.Bytes()...)
 
+	fmt.Printf("Signature : %x\n", SIGNATURE)
 }
 
-func GeneratePrivateKey() {
+/* Need to figure out how this really works. Do I pass all the data? Because I need r,s, and the signhash */
+func VerifySignature() {
+	// verifystatus := ecdsa.Verify(&PUBLIC_KEY, signhash, r, s)
+	// fmt.Println(verifystatus) // should be true
+}
+
+func GeneratePublicAndPrivateKey() {
 	c := elliptic.P256()
-	/* TODO: Figure out why we need to use io.Reader type */
-	var reader io.Reader
-	&PRIVATE_KEY, _ = ecdsa.GenerateKey(c, reader)
+	PRIVATE_KEY, _ = ecdsa.GenerateKey(c, crand.Reader)
+	PUBLIC_KEY = PRIVATE_KEY.PublicKey
+	fmt.Println("PRIVATE KEY")
+	fmt.Println(PRIVATE_KEY)
 }
+
 
 
 /* Merges transaction with other transactions on the chain to maintain anonymity */
