@@ -485,7 +485,7 @@ func StartTryingNonces() {
 		Create an MPT.
 		This will block the calling thread.
 		*/
-		mpt := GenerateMpt()
+		mpt := GenerateVotingMpt()
 
 		/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if
 			SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
@@ -626,7 +626,7 @@ This contains the data that we need to insert into the block, before we send
 it to the blockchain. Requires user input before the MPT is generated.
 
 */
-func GenerateMpt() p1.MerklePatriciaTrie {
+func GenerateVotingMpt() p1.MerklePatriciaTrie {
 	mpt := p1.MerklePatriciaTrie{}
 	mpt.Initial()
 	scanner := bufio.NewScanner(os.Stdin)

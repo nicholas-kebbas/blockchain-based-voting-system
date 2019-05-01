@@ -34,6 +34,7 @@ Ring signature functionality is dependent on having some type of existing digita
 
 
 Updated Timeline:
+
 Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger) :white_check_mark:
 
 Week 1b: Provide voting user interface and downloadable ballet :white_check_mark:
@@ -52,11 +53,69 @@ Week 4: Verify integrity of the votes and count the votes
 Final Due Date/Demo - 5/16/19 at 2:30 p.m.
 
 Permissioned Blockchain
+<addr>
+    
+    /* For simplicity's sake, this can just be the Port Numbers since we're collecting that info already.
+    In production, we can actually keep a seperate list of predetermined allowed (Public?) IDs */
+    
+     /* Only these IDs are allowed to write. This gives the semblance of a permissioned blockchain */
+    var ALLOWED_IDS = map[int32]bool {
+        6688:true,
+        6669:true,
+        6670:true,
+    }
+</addr>
 
-Voting User Interface and Downloadable Ballot
+User Interface for Voting
+<addr>
 
+    func GenerateVotingMpt() p1.MerklePatriciaTrie {
+        mpt := p1.MerklePatriciaTrie{}
+        mpt.Initial()
+        scanner := bufio.NewScanner(os.Stdin)
+        var text string
+        for text != "q" {  // break the loop if text == "q"
+            fmt.Print("Enter your Vote: ")
+            scanner.Scan()
+            text = scanner.Text()
+            if text != "q" {
+                fmt.Println("You voted for ", text)
+            }
+        }
+        fmt.Println("Thanks for voting!")
+        /* Record the Vote in the MPT. Value can be vote value. Key will be the
+        public key i think.
+        */
+        mpt.Insert(text, text)
+    
+        if scanner.Err() != nil {
+            // handle error.
+        }
+        return mpt
+    }
 
+</addr>
 
+Downloadable Ballot
+
+Data Transactions and Digital Signature
+
+<addr>
+
+    func SignTransaction(value string) {      	
+      	transaction := []byte (value)
+      	r := big.NewInt(0)
+      	s := big.NewInt(0)
+      	serr := errors.New("Error")
+      	/* Returns Big Ints r and s
+      	*/
+      	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
+      	if serr != nil {
+      		fmt.Println("Error")
+      		os.Exit(1)
+      	}
+      }
+</addr>
 
 
 ## Documentation
