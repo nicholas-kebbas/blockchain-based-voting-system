@@ -64,6 +64,7 @@ Permissioned Blockchain
         6669:true,
         6670:true,
     }
+    
 </addr>
 
 User Interface for Voting
@@ -98,6 +99,24 @@ User Interface for Voting
 
 Downloadable Ballot
 
+<addr>
+
+    /* POST the contents of the ballot so other nodes can download. Read from ballot.json */
+    func UploadBallot(w http.ResponseWriter, r *http.Request) {
+        /* Read the JSON File */
+        plan, _ := ioutil.ReadFile("ballot.json")
+        var data interface{}
+        err := json.Unmarshal(plan, &data)
+        if err != nil {
+            fmt.Println("Error")
+        }
+        fmt.Fprint(w, plan)
+        fmt.Println(plan)
+    }
+    
+    
+</addr>
+
 Data Transactions and Digital Signature
 
 <addr>
@@ -115,6 +134,31 @@ Data Transactions and Digital Signature
       		os.Exit(1)
       	}
       }
+</addr>
+
+<addr>
+
+    func GeneratePublicAndPrivateKey() {
+        c := elliptic.P256()
+        PRIVATE_KEY, _ = ecdsa.GenerateKey(c, crand.Reader)
+        PUBLIC_KEY = append(PRIVATE_KEY.PublicKey.X.Bytes(), PRIVATE_KEY.PublicKey.Y.Bytes()...)
+    }
+    
+    /* Hash the public key to display on the blockchain. This is how BTC does it */
+    func HashPublicKey(publicKey []byte) []byte {
+        publicSHA256 := sha256.Sum256(publicKey)
+        ripemd160Hasher := ripemd160.New()
+        _, err := ripemd160Hasher.Write(publicSHA256[:])
+    
+        if err != nil {
+            fmt.Println("Cannot Hash Public Key")
+            os.Exit(1)
+        }
+    
+        hashedPublicKey := ripemd160Hasher.Sum(nil)
+        return hashedPublicKey
+    }
+
 </addr>
 
 
