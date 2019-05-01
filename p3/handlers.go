@@ -3,7 +3,7 @@ package p3
 import (
 	"bufio"
 	"crypto/ecdsa"
-	"crypto/md5"
+	"crypto/elliptic"
 	crand "crypto/rand"
 	"encoding/json"
 	"errors"
@@ -13,7 +13,6 @@ import (
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/sha3"
-	"hash"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
@@ -153,6 +152,7 @@ func Create (w http.ResponseWriter, r *http.Request) {
 			newBlockChain := data.NewBlockChain()
 			mpt := p1.MerklePatriciaTrie{}
 			mpt.Initial()
+			/* First block does not need to be verified, rest do */
 			mpt.Insert("Initial", "Value")
 			newBlockChain.GenBlock(mpt)
 			/* Set Global variable SBC to be this new blockchain */
@@ -479,7 +479,7 @@ func StartTryingNonces() {
 			parentHash = parentBlock.Header.Hash
 		}
 		/* Create an MPT. */
-		mpt := GenerateRandomMpt()
+		mpt := GenerateMpt()
 
 		/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if
 			SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
@@ -521,42 +521,52 @@ func StartTryingNonces() {
 func VerifyNonceFromBlock(block p2.Block) bool {
 	verified := false
 	str := block.Header.ParentHash + block.Header.Nonce + block.GetMptRoot()
-	hash := sha3.Sum256([]byte(str))
+	p5hash := sha3.Sum256([]byte(str))
 	/* Get first N digits of sha */
-	firstN := string(hash[:])
+	firstN := string(p5hash[:])
 	if strings.HasPrefix(firstN, "000") {
 		verified = true
 	}
 	return verified
 }
 
-/* Need to implement basic signatures first. Generate a signature based on contents of
-the transaction and the private key.  Must take Hash of Block as input.
+/* Need to implement basic signatures first. */
+
+/* In order to sign data, we need the data to sign.
+
+So we need to take that as input. This may end up being MPT.
+Where do we store it?
+
 */
 
-func CreateSignature() {
-	var h hash.Hash
-	h = md5.New()
+func SignTransaction(value string) {
+	transaction := []byte (value)
 	r := big.NewInt(0)
 	s := big.NewInt(0)
 	serr := errors.New("Error")
-	signhash := h.Sum(nil)
 	/* Returns Big Ints r and s
 	I think together those are the signature?
 	*/
-	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, signhash)
+	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
 	if serr != nil {
 		fmt.Println("Error")
 		os.Exit(1)
 	}
 
+	verifystatus := ecdsa.Verify(&PUBLIC_KEY, transaction, r, s)
+	fmt.Println(verifystatus)
 	SIGNATURE = r.Bytes()
 	SIGNATURE = append(SIGNATURE, s.Bytes()...)
-
 	fmt.Printf("Signature : %x\n", SIGNATURE)
 }
 
-/* Need to figure out how this really works. Do I pass all the data? Because I need r,s, and the signhash */
+/* To verify the data, we need
+1. The data that was signed
+2. The signature
+3. The Public Key
+
+Will likely take as input the signature
+*/
 func VerifySignature() {
 	// verifystatus := ecdsa.Verify(&PUBLIC_KEY, signhash, r, s)
 	// fmt.Println(verifystatus) // should be true
@@ -570,8 +580,6 @@ func GeneratePublicAndPrivateKey() {
 	fmt.Println(PRIVATE_KEY)
 }
 
-
-
 /* Merges transaction with other transactions on the chain to maintain anonymity */
 func RingSignature() string {
 	ringSignature := ""
@@ -580,7 +588,15 @@ func RingSignature() string {
 
 }
 
-func GenerateRandomMpt() p1.MerklePatriciaTrie {
+/*
+
+Changed so there's User Input Required Now
+
+This contains the data that we need to insert into the block, before we send
+it to the blockchain
+
+*/
+func GenerateMpt() p1.MerklePatriciaTrie {
 	mpt := p1.MerklePatriciaTrie{}
 	mpt.Initial()
 	scanner := bufio.NewScanner(os.Stdin)
@@ -594,7 +610,9 @@ func GenerateRandomMpt() p1.MerklePatriciaTrie {
 		}
 	}
 	fmt.Println("Thanks for voting!")
-	/* Record the Vote in the MPT. Value can be vote value, but need to decide what the key is */
+	/* Record the Vote in the MPT. Value can be vote value. Key will be the
+	public key i think.
+	*/
 	mpt.Insert(text, text)
 
 	if scanner.Err() != nil {

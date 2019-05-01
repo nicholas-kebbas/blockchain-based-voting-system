@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3"
 	"testing"
 )
 
@@ -32,6 +33,8 @@ func TestSignature(t *testing.T) {
 	if !valid {
 		t.Fail()
 	}
+	testByteArray := []byte("test")
+	p3.CreateSignature(testByteArray)
 
 
 
