@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
+	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 	"io/ioutil"
 	"math/big"
@@ -33,7 +35,8 @@ var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
 /* Need to introduce a private key so we can properly do signatures */
 var PRIVATE_KEY = new(ecdsa.PrivateKey)
-var PUBLIC_KEY = ecdsa.PublicKey{}
+var PUBLIC_KEY = []byte{}
+var HASHED_PUBLIC_KEY = []byte{}
 var SIGNATURE = []byte{}
 var FOUNDREMOTE = false
 var CREATED = false
@@ -478,7 +481,10 @@ func StartTryingNonces() {
 			parentBlock := SBC.GetLatestBlocks()[0]
 			parentHash = parentBlock.Header.Hash
 		}
-		/* Create an MPT. */
+		/*
+		Create an MPT.
+		This will block the calling thread.
+		*/
 		mpt := GenerateMpt()
 
 		/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if
@@ -517,7 +523,7 @@ func StartTryingNonces() {
 	} /* End outer while. This will never end unless node is stopped. */
 }
 
-
+/* This verifies the POW */
 func VerifyNonceFromBlock(block p2.Block) bool {
 	verified := false
 	str := block.Header.ParentHash + block.Header.Nonce + block.GetMptRoot()
@@ -545,7 +551,6 @@ func SignTransaction(value string) {
 	s := big.NewInt(0)
 	serr := errors.New("Error")
 	/* Returns Big Ints r and s
-	I think together those are the signature?
 	*/
 	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
 	if serr != nil {
@@ -553,7 +558,8 @@ func SignTransaction(value string) {
 		os.Exit(1)
 	}
 
-	verifystatus := ecdsa.Verify(&PUBLIC_KEY, transaction, r, s)
+	/* Need to figure out how to get the r and s values from the signature on the blockchain */
+	verifystatus := ecdsa.Verify(&PRIVATE_KEY.PublicKey, transaction, r, s)
 	fmt.Println(verifystatus)
 	SIGNATURE = r.Bytes()
 	SIGNATURE = append(SIGNATURE, s.Bytes()...)
@@ -572,12 +578,36 @@ func VerifySignature() {
 	// fmt.Println(verifystatus) // should be true
 }
 
+/* Generate the keys we need for the addresses, signature, etc.
+
+In elliptic curve based algorithms, public keys are points on a curve.
+A public key is a combination of X, Y coordinates.
+
+PUBLIC_KEY should be stored as a byte array since it's easier to
+work with that way.
+
+*/
+
+
 func GeneratePublicAndPrivateKey() {
 	c := elliptic.P256()
 	PRIVATE_KEY, _ = ecdsa.GenerateKey(c, crand.Reader)
-	PUBLIC_KEY = PRIVATE_KEY.PublicKey
-	fmt.Println("PRIVATE KEY")
-	fmt.Println(PRIVATE_KEY)
+	PUBLIC_KEY = append(PRIVATE_KEY.PublicKey.X.Bytes(), PRIVATE_KEY.PublicKey.Y.Bytes()...)
+}
+
+/* Hash the public key to display on the blockchain. This is how BTC does it */
+func HashPublicKey(publicKey []byte) []byte {
+	publicSHA256 := sha256.Sum256(publicKey)
+	ripemd160Hasher := ripemd160.New()
+	_, err := ripemd160Hasher.Write(publicSHA256[:])
+
+	if err != nil {
+		fmt.Println("Cannot Hash Public Key")
+		os.Exit(1)
+	}
+
+	hashedPublicKey := ripemd160Hasher.Sum(nil)
+	return hashedPublicKey
 }
 
 /* Merges transaction with other transactions on the chain to maintain anonymity */
@@ -593,7 +623,7 @@ func RingSignature() string {
 Changed so there's User Input Required Now
 
 This contains the data that we need to insert into the block, before we send
-it to the blockchain
+it to the blockchain. Requires user input before the MPT is generated.
 
 */
 func GenerateMpt() p1.MerklePatriciaTrie {

@@ -39,6 +39,7 @@ type JsonBlock struct {
 	Size       int32             `json:"size"`
 	Nonce      string            `json:"nonce"`
 	MPT        map[string]string `json:"mpt"`
+	Signature  map[string]string `json:"signature"`
 }
 
 /**
