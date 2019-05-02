@@ -162,6 +162,31 @@ Data Transactions and Digital Signature
 
 </addr>
 
+## Resources
+
+###Permissioned Blockchain
+https://www.coindesk.com/information/what-is-the-difference-between-open-and-permissioned-blockchains
+https://medium.com/coinmonks/permissioned-blockchains-are-a-dead-end-67c2b060bc52
+https://monax.io/learn/permissioned_blockchains/
+
+###Transactions
+
+###Digital Signature
+https://golang.org/pkg/crypto/ecdsa
+https://lisk.io/academy/blockchain-basics/how-does-blockchain-work/digital-signatures
+https://medium.com/@xragrawal/digital-signature-from-blockchain-context-cedcd563eee5
+https://medium.com/icovo/digital-signatures-in-a-blockchain-digital-signatures-44b981b75413
+
+###Ring Signature
+https://www.mycryptopedia.com/monero-ring-signature-explained/
+https://en.wikipedia.org/wiki/Ring_signature
+
+###Different Methods of Consensus
+https://blockchain.intellectsoft.net/blog/consensus-protocols-that-serve-different-business-needs-part-2/
+https://blockchainlion.com/consensus-blockchain/
+
+###Voting
+https://static1.squarespace.com/static/5b0be2f4e2ccd12e7e8a9be9/t/5b6c38550e2e725e9cad3f18/1533818968655/Agora_Whitepaper.pdf
 
 ## Documentation
 You will need to launch the initial node on PORT 6688, and then send a GET request to /create the create the first blockchain. 

@@ -494,7 +494,8 @@ Where do we store it?
 
 */
 
-/* Take the hash of the block and encrypt it */
+/* Take the hash of the MPT and encrypt it */
+/* We will need to add a Signature and a Public Key parameter to the Block */
 func SignTransaction(value string) {
 	transaction := []byte (value)
 	r := big.NewInt(0)
@@ -524,6 +525,7 @@ func SignTransaction(value string) {
 2. The signature
 3. The Public Key
 
+So we need to add that to the Block
 Will likely take as input the signature
 */
 func VerifySignature() bool{

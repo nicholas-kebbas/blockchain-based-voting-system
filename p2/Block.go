@@ -20,7 +20,8 @@ type Header struct {
 	Height     int32 `json:"height"`
 	ParentHash string `json:"parentHash"`
 	Size       int32 `json:"size"`
-	Nonce      string `json:"nonce"`
+	Signature  string `json:"signature"`
+	PublicKey  string `json:"publickey"`
 }
 
 type Value struct {
@@ -39,19 +40,20 @@ type JsonBlock struct {
 	Size       int32             `json:"size"`
 	Nonce      string            `json:"nonce"`
 	MPT        map[string]string `json:"mpt"`
-	Signature  map[string]string `json:"signature"`
+	PublicKey  string `json:"publickey"`
+	Signature  string `json:"signature"`
 }
 
 /**
 This function takes arguments(such as height, parentHash, and value of MPT type)
 and forms a block.
  */
-func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatriciaTrie) Block {
+func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatriciaTrie, publicKey []byte, signature string) Block {
 	hash := deriveHash(height, timestamp, parentHash, mpt)
 	size := len([]byte(fmt.Sprintf("%v", mpt)))
+	publicKeyString := string(publicKey)
 	size32 := int32(size)
-	nonce := ""
-	newHeader := Header{hash, timestamp, height, parentHash, size32, nonce}
+	newHeader := Header{hash, timestamp, height, parentHash, size32, signature, publicKeyString}
 	newValue := Value{mpt, mpt.GetStringDb()}
 	newBlock := Block{newHeader, newValue}
 	return newBlock
@@ -78,7 +80,8 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.ParentHash = j.ParentHash
 	b.Header.TimeStamp = j.Timestamp
 	b.Header.Height = j.Height
-	b.Header.Nonce = j.Nonce
+	b.Header.Signature = j.Signature
+	b.Header.PublicKey = j.PublicKey
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
 	return b
@@ -124,11 +127,6 @@ func deriveHash(height int32, timestamp int64, parentHash string, mpt p1.MerkleP
 
 func (block *Block) GetMptRoot() string {
 	return block.Value.mpt.GetRoot()
-}
-
-func CalculateNonce() string {
-	nonce := GenerateRandomString(8)
-	return  nonce
 }
 
 func GenerateRandomString(length int) string {
