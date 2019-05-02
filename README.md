@@ -213,6 +213,7 @@ We use the ECDSA golang library to generate our Public and Private keys.
 ###Ring Signature
 * https://www.mycryptopedia.com/monero-ring-signature-explained/
 * https://en.wikipedia.org/wiki/Ring_signature
+* https://blockonomi.com/ring-signatures/
 
 ###Different Methods of Consensus
 * https://blockchain.intellectsoft.net/blog/consensus-protocols-that-serve-different-business-needs-part-2/
