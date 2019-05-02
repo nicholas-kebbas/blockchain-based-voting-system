@@ -68,6 +68,7 @@ Permissioned Blockchain
 </addr>
 
 User Interface for Voting
+Added a CLI so that the voter can submit their vote. The block creation blocks while the user votes.
 <addr>
 
     func GenerateVotingMpt() p1.MerklePatriciaTrie {
@@ -98,7 +99,7 @@ User Interface for Voting
 </addr>
 
 Downloadable Ballot
-
+The node must download the ballot from the blockchain so they know they're voting choices.
 <addr>
 
     /* POST the contents of the ballot so other nodes can download. Read from ballot.json */

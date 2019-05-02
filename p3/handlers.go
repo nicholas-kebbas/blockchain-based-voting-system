@@ -14,7 +14,6 @@ import (
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
 	"golang.org/x/crypto/ripemd160"
-	"golang.org/x/crypto/sha3"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
@@ -120,7 +119,7 @@ func Start(w http.ResponseWriter, r *http.Request) {
 			}
 			/* Call down the voting ballot */
 			go StartHeartBeat()
-			go StartTryingNonces()
+			go StartVotingProcess()
 			ifStarted = true
 		}
 	}
@@ -184,7 +183,7 @@ func Download() {
 	jsonPeerList, _ := Peers.PeerMapToJson()
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	trie := p1.MerklePatriciaTrie{}
-	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, "", trie)
+	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, jsonPeerList, SELF_ADDR, false, trie)
 	/* Need to figure out what to send here in the request */
 	res, _ := http.Post(FIRST_NODE_SERVER, "application/json; charset=UTF-8", strings.NewReader(newHeartBeatData.HeartBeatToJson()))
 	//res, _ := http.DefaultClient.Do(req)
@@ -374,8 +373,8 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 		/* If it contains new block, check if our blockchain has parent */
 		newBlock := p2.Block{}
 		newBlock = newBlock.DecodeFromJson(t.BlockJson)
-		/* First verify the nonce, then do the other steps */
-		if VerifyNonceFromBlock(newBlock) {
+		/* First verify the Signature, then do the other steps */
+		if VerifySignature() {
 			FOUNDREMOTE = true
 			/* This keeps returning false when it shouldn't. We have the parent in most cases, so this func is wrong */
 			if SBC.CheckParentHash(newBlock) == false {
@@ -450,17 +449,17 @@ func StartHeartBeat() {
 		and send it to all peers in the local PeerMap */
 		stringJson, _ := Peers.PeerMapToJson()
 		trie := p1.MerklePatriciaTrie{}
-		newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, false, "", trie)
+		newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, false, trie)
 		ForwardHeartBeat(newHeartBeatData)
 	}
 }
 
-func SendBlock(nonce string, trie p1.MerklePatriciaTrie) {
-	fmt.Println("New Block Found! Sending")
+func SendBlock(trie p1.MerklePatriciaTrie) {
+	fmt.Println("Vote Completed! Sending")
 	/* PrepareHeartBeatData() to create a HeartBeatData,
 	and send it to all peers in the local PeerMap */
 	stringJson, _ := Peers.PeerMapToJson()
-	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, true, nonce, trie)
+	newHeartBeatData := data.PrepareHeartBeatData(&SBC, ID, stringJson, SELF_ADDR, true, trie)
 	ForwardHeartBeat(newHeartBeatData)
 }
 
@@ -470,70 +469,20 @@ Nonce is a string of 16 hexes such as "1f7b169c846f218a".
 Initialize the rand when you start a new node with something unique about each node, such as the current time or the port number.
 
  */
-func StartTryingNonces() {
+func StartVotingProcess() {
 	/* Start an outer while loop. This will need to run the whole time the node is active. */
 	for ok := true; ok; ok = true {
 		/* Get the latest block or one of the latest blocks to use as a parent block. */
-		parentHash := ""
-		if SBC.GetLength() == 0 {
-			parentHash = "Genesis"
-		} else {
-			parentBlock := SBC.GetLatestBlocks()[0]
-			parentHash = parentBlock.Header.Hash
-		}
 		/*
 		Create an MPT.
 		This will block the calling thread.
 		*/
 		mpt := GenerateVotingMpt()
 
-		/*  Randomly generate the first nonce, verify it with simple PoW algorithm to see if
-			SHA3(parentHash + nonce + mptRootHash) starts with 10 0's (or the number you modified into).
-			Since we use one laptop to try different nonces, six to seven 0's could be enough.
-			If the nonce failed the verification, increment it by 1 and try the next nonce.
-			 */
-		var i= 1
-		for i < 1000 {
-			if FOUNDREMOTE == false {
-				nonce := p2.CalculateNonce()
-				str := parentHash + nonce + mpt.GetRoot()
-				hash := sha3.Sum256([]byte(str))
-				/* Get first N digits of sha */
-				firstN := string(hash[:])
-				if strings.HasPrefix(firstN, "000") {
-					/* Create block, etc. */
-					i = 1000
-					/* Send the block to peers */
-					SendBlock(nonce, mpt)
-					/* Break out of loop and start working on next nonce */
-					break
-				}
-			} else {
-				/* Was found remotely so try next nonce now */
-				break
-			}
-		}
+		/*  Don't need to do the nonce stuff anymore */
+		SendBlock(mpt)
 
-		/* If a nonce is found and the next block is generated, forward that block to all peers with a HeartBeatData;
-		  In case we want to do that outside of loop */
-
-		/*  If someone else found a nonce first, and you received the new block through your function ReceiveHeartBeat(),
-		  stop trying nonce on the current block, continue to the while loop by jumping to the step(2)
-		   */
 	} /* End outer while. This will never end unless node is stopped. */
-}
-
-/* This verifies the POW */
-func VerifyNonceFromBlock(block p2.Block) bool {
-	verified := false
-	str := block.Header.ParentHash + block.Header.Nonce + block.GetMptRoot()
-	p5hash := sha3.Sum256([]byte(str))
-	/* Get first N digits of sha */
-	firstN := string(p5hash[:])
-	if strings.HasPrefix(firstN, "000") {
-		verified = true
-	}
-	return verified
 }
 
 /* Need to implement basic signatures first. */
@@ -545,6 +494,7 @@ Where do we store it?
 
 */
 
+/* Take the hash of the block and encrypt it */
 func SignTransaction(value string) {
 	transaction := []byte (value)
 	r := big.NewInt(0)
@@ -559,8 +509,11 @@ func SignTransaction(value string) {
 	}
 
 	/* Need to figure out how to get the r and s values from the signature on the blockchain */
-	verifystatus := ecdsa.Verify(&PRIVATE_KEY.PublicKey, transaction, r, s)
-	fmt.Println(verifystatus)
+
+	/*
+	The signature is a combination of the author's private key and the content of
+	the document it certifies
+	 */
 	SIGNATURE = r.Bytes()
 	SIGNATURE = append(SIGNATURE, s.Bytes()...)
 	fmt.Printf("Signature : %x\n", SIGNATURE)
@@ -573,9 +526,10 @@ func SignTransaction(value string) {
 
 Will likely take as input the signature
 */
-func VerifySignature() {
+func VerifySignature() bool{
 	// verifystatus := ecdsa.Verify(&PUBLIC_KEY, signhash, r, s)
 	// fmt.Println(verifystatus) // should be true
+	return true
 }
 
 /* Generate the keys we need for the addresses, signature, etc.
