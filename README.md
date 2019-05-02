@@ -30,7 +30,7 @@ Success Criteria:
 
 The original timeline did not allocate time to implement public/private keys or digital signatures.
 Ring signature functionality is dependent on having some type of existing digital signature infrastructure in place.
-I've moved back "Implement solution to blockchain forking" but was still able to start in the ring signature on schedule.
+I've moved back "Implement solution to blockchain forking" but was still able to start on the ring signature on schedule.
 
 
 
@@ -102,7 +102,7 @@ Added a CLI so that the voter can submit their vote. The block creation blocks w
 </addr>
 
 ### Downloadable Ballot
-The node must download the ballot from the blockchain so they know they're voting choices.
+The node must download the ballot from the blockchain so they know their voting choices.
 <addr>
 
     /* POST the contents of the ballot so other nodes can download. Read from ballot.json */
