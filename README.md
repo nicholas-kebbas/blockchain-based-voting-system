@@ -1,4 +1,4 @@
-# Project 5 - 
+# Project 5 
 
 ## A Blockchain Based Voting System
 ### Why: 
