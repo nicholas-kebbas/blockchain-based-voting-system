@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	crand "crypto/rand"
 	"crypto/sha256"
+	"encoding/asn1"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -76,6 +77,10 @@ type CanonicalChainBlock struct {
 	hash string
 	parentHash string
 	size int32
+}
+/* Need to make a ECDSASignature struct to verify */
+type ECDSASignature struct {
+	R, S *big.Int
 }
 
 
@@ -374,9 +379,8 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 		newBlock := p2.Block{}
 		newBlock = newBlock.DecodeFromJson(t.BlockJson)
 		/* First verify the Signature, then do the other steps */
-		if VerifySignature() {
+		if VerifySignature(newBlock) {
 			FOUNDREMOTE = true
-			/* This keeps returning false when it shouldn't. We have the parent in most cases, so this func is wrong */
 			if SBC.CheckParentHash(newBlock) == false {
 				/* So we're looking for the parent here and adding it if we don't have it.*/
 				AskForBlock(newBlock.Header.Height - 1, newBlock.Header.ParentHash)
@@ -473,10 +477,7 @@ func StartVotingProcess() {
 	/* Start an outer while loop. This will need to run the whole time the node is active. */
 	for ok := true; ok; ok = true {
 		/* Get the latest block or one of the latest blocks to use as a parent block. */
-		/*
-		Create an MPT.
-		This will block the calling thread.
-		*/
+		/* Create an MPT. This will block the calling thread. */
 		mpt := GenerateVotingMpt()
 
 		/*  Don't need to do the nonce stuff anymore */
@@ -489,8 +490,7 @@ func StartVotingProcess() {
 
 /* In order to sign data, we need the data to sign.
 
-So we need to take that as input. This may end up being MPT.
-Where do we store it?
+So we need to take that as input. This is probably MPT
 
 */
 
@@ -517,7 +517,6 @@ func SignTransaction(value string) {
 	 */
 	SIGNATURE = r.Bytes()
 	SIGNATURE = append(SIGNATURE, s.Bytes()...)
-	fmt.Printf("Signature : %x\n", SIGNATURE)
 }
 
 /* To verify the data, we need
@@ -528,11 +527,19 @@ func SignTransaction(value string) {
 So we need to add that to the Block
 Will likely take as input the signature
 */
-func VerifySignature() bool{
-	// verifystatus := ecdsa.Verify(&PUBLIC_KEY, signhash, r, s)
-	// fmt.Println(verifystatus) // should be true
-	return true
+func VerifySignature(block p2.Block) bool{
+	e := &ECDSASignature{}
+	_, err := asn1.Unmarshal([]byte(block.Header.Signature), e)
+	if err != nil {
+		fmt.Println("Error Unmarshaling Block")
+		return false
+	}
+	/* Currently a bug here */
+	verified := ecdsa.Verify(&block.Header.PublicKey, []byte(block.GetMptRoot()), e.R, e.S)
+	return verified
 }
+
+
 
 /* Generate the keys we need for the addresses, signature, etc.
 
@@ -552,6 +559,7 @@ func GeneratePublicAndPrivateKey() {
 }
 
 /* Hash the public key to display on the blockchain. This is how BTC does it */
+/* TODO: Implement this function for additional ***security*** and ***privacy***! */
 func HashPublicKey(publicKey []byte) []byte {
 	publicSHA256 := sha256.Sum256(publicKey)
 	ripemd160Hasher := ripemd160.New()

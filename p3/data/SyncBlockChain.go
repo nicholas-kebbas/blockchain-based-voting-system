@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3"
 	"sync"
 )
 
@@ -82,14 +83,21 @@ func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie) p2.Block {
 	height := sbc.bc.Length
 	if height == 0 {
 		sbc.bc = p2.NewBlockChain()
-		newBlock := p2.Initial(1, 123, "Genesis", mpt)
-		newBlock.Header.Nonce = p2.CalculateNonce()
+		/* We have our Public Key Stored in Handlers */
+
+		/* TODO: Change GetRoot() to a hashed version of the MPT. */
+		p3.SignTransaction(mpt.GetRoot())
+		newBlock := p2.Initial(1, 123, "Genesis", mpt, p3.PUBLIC_KEY, p3.SIGNATURE)
+
 		sbc.bc.Insert(newBlock)
 		return newBlock
 	}
 	latestBlock := sbc.bc.Get(height)[0]
+
 	/* Add height because it's a new block, child block of parent */
-	newBlock := p2.Initial(height + 1, 123, latestBlock.Header.Hash, mpt)
+	/* TODO: Change GetRoot() to a hashed version of the MPT. */
+	p3.SignTransaction(mpt.GetRoot())
+	newBlock := p2.Initial(height + 1, 123, latestBlock.Header.Hash, mpt, p3.PUBLIC_KEY, p3.SIGNATURE)
 	sbc.bc.Insert(newBlock)
 	return newBlock
 }

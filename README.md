@@ -30,29 +30,32 @@ Success Criteria:
 
 The original timeline did not allocate time to implement public/private keys or digital signatures.
 Ring signature functionality is dependent on having some type of existing digital signature infrastructure in place.
+I've moved back "Implement solution to blockchain forking" but was still able to start in the ring signature on schedule.
 
 
 
-Updated Timeline:
+### Updated Timeline:
 
 Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger) :white_check_mark:
 
 Week 1b: Provide voting user interface and downloadable ballet :white_check_mark:
 
-Week 2a: Implement solution to blockchain forking. (Implement Round Robin Consensus, Delegated Proof of Stake, or something similar) :x:
+Week 2a: Implement signed data transactions, public and private keys :white_check_mark:
 
-Week 2b: Implement data transactions and Digital Signatures for validation on blockchain :hourglass_flowing_sand:
+Week 2b: Verify on the blockchain by digital signature :hourglass_flowing_sand: (Currently a bug in verification)
 
 CHECKPOINT - 5/1/19
 
-Week 3a: Start work on encrypting voting results using ring signature algorithm
+Week 3a: Start work on encrypting voting results using ring signature algorithm :hourglass_flowing_sand:
 
-Week 3b: Verify on the blockchain by digital signature
+Week 3b: Validate ring signature results  :x:
 
-Week 4: Verify integrity of the votes and count the votes
+Week 4a: Implement solution to blockchain forking. (Implement Round Robin Consensus, Delegated Proof of Stake, etc. or use a Canononical Tree)  :x:
+
+Week 4b: Verify integrity of the votes and count the votes  :x:
 Final Due Date/Demo - 5/16/19 at 2:30 p.m.
 
-Permissioned Blockchain
+### Permissioned Blockchain
 <addr>
     
     /* For simplicity's sake, this can just be the Port Numbers since we're collecting that info already.
@@ -67,7 +70,7 @@ Permissioned Blockchain
     
 </addr>
 
-User Interface for Voting
+### User Interface for Voting
 Added a CLI so that the voter can submit their vote. The block creation blocks while the user votes.
 <addr>
 
@@ -98,7 +101,7 @@ Added a CLI so that the voter can submit their vote. The block creation blocks w
 
 </addr>
 
-Downloadable Ballot
+### Downloadable Ballot
 The node must download the ballot from the blockchain so they know they're voting choices.
 <addr>
 
@@ -118,24 +121,53 @@ The node must download the ballot from the blockchain so they know they're votin
     
 </addr>
 
-Data Transactions and Digital Signature
+### Data Transactions and Digital Signature
+To implement a ring signature and guarantee integrity of data, the first step is to implement digital signatures.
+The current implementation of SignTransation() takes the MPT root as input, and signs
+that value with the node's private key.
 
+The current implementation of VerifySignature() takes as input a block that's ready
+to be added to the blockchain, and outputs a boolean.
 <addr>
 
-    func SignTransaction(value string) {      	
-      	transaction := []byte (value)
-      	r := big.NewInt(0)
-      	s := big.NewInt(0)
-      	serr := errors.New("Error")
-      	/* Returns Big Ints r and s
-      	*/
-      	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
-      	if serr != nil {
-      		fmt.Println("Error")
-      		os.Exit(1)
-      	}
-      }
+    func SignTransaction(value string) {
+        transaction := []byte (value)
+        r := big.NewInt(0)
+        s := big.NewInt(0)
+        serr := errors.New("Error")
+        /* Returns Big Ints r and s
+        */
+        r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
+        if serr != nil {
+            fmt.Println("Error")
+            os.Exit(1)
+        }
+    
+        /* Need to figure out how to get the r and s values from the signature on the blockchain */
+    
+        /*
+        The signature is a combination of the author's private key and the content of
+        the document it certifies
+         */
+        SIGNATURE = r.Bytes()
+        SIGNATURE = append(SIGNATURE, s.Bytes()...)
+    }
+      
+    func VerifySignature(block p2.Block) bool{
+    	e := &ECDSASignature{}
+    	_, err := asn1.Unmarshal([]byte(block.Header.Signature), e)
+    	if err != nil {
+    		fmt.Println("Error Unmarshaling Block")
+    		return false
+    	}
+    	verified := ecdsa.Verify(block.PublicKey, []byte(block.GetMptRoot()), e.R, e.S)
+    	return verified
+    }
+    
 </addr>
+
+### Public and Private Key Generation
+We use the ECDSA golang library to generate our Public and Private keys.
 
 <addr>
 
@@ -165,28 +197,29 @@ Data Transactions and Digital Signature
 ## Resources
 
 ###Permissioned Blockchain
-https://www.coindesk.com/information/what-is-the-difference-between-open-and-permissioned-blockchains
-https://medium.com/coinmonks/permissioned-blockchains-are-a-dead-end-67c2b060bc52
-https://monax.io/learn/permissioned_blockchains/
+* https://www.coindesk.com/information/what-is-the-difference-between-open-and-permissioned-blockchains
+* https://medium.com/coinmonks/permissioned-blockchains-are-a-dead-end-67c2b060bc52
+* https://monax.io/learn/permissioned_blockchains/
 
 ###Transactions
+* https://jeiwan.cc/posts/building-blockchain-in-go-part-4/
 
 ###Digital Signature
-https://golang.org/pkg/crypto/ecdsa
-https://lisk.io/academy/blockchain-basics/how-does-blockchain-work/digital-signatures
-https://medium.com/@xragrawal/digital-signature-from-blockchain-context-cedcd563eee5
-https://medium.com/icovo/digital-signatures-in-a-blockchain-digital-signatures-44b981b75413
+* https://golang.org/pkg/crypto/ecdsa
+* https://lisk.io/academy/blockchain-basics/how-does-blockchain-work/digital-signatures
+* https://medium.com/@xragrawal/digital-signature-from-blockchain-context-cedcd563eee5
+* https://medium.com/icovo/digital-signatures-in-a-blockchain-digital-signatures-44b981b75413
 
 ###Ring Signature
-https://www.mycryptopedia.com/monero-ring-signature-explained/
-https://en.wikipedia.org/wiki/Ring_signature
+* https://www.mycryptopedia.com/monero-ring-signature-explained/
+* https://en.wikipedia.org/wiki/Ring_signature
 
 ###Different Methods of Consensus
-https://blockchain.intellectsoft.net/blog/consensus-protocols-that-serve-different-business-needs-part-2/
-https://blockchainlion.com/consensus-blockchain/
+* https://blockchain.intellectsoft.net/blog/consensus-protocols-that-serve-different-business-needs-part-2/
+* https://blockchainlion.com/consensus-blockchain/
 
 ###Voting
-https://static1.squarespace.com/static/5b0be2f4e2ccd12e7e8a9be9/t/5b6c38550e2e725e9cad3f18/1533818968655/Agora_Whitepaper.pdf
+* https://static1.squarespace.com/static/5b0be2f4e2ccd12e7e8a9be9/t/5b6c38550e2e725e9cad3f18/1533818968655/Agora_Whitepaper.pdf
 
 ## Documentation
 You will need to launch the initial node on PORT 6688, and then send a GET request to /create the create the first blockchain. 
