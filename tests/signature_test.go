@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3"
 	"testing"
 )
 
@@ -26,15 +25,15 @@ func TestSignature(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("signature: (0x%x, 0x%x)\n", r, s)
+	fmt.Printf("signature_p: (0x%x, 0x%x)\n", r, s)
 	/* Validate Truth */
 	valid := ecdsa.Verify(&privateKey.PublicKey, hash[:], r, s)
-	fmt.Println("signature verified:", valid)
+	fmt.Println("signature_p verified:", valid)
 	if !valid {
 		t.Fail()
 	}
-	testByteArray := []byte("test")
-	p3.CreateSignature(testByteArray)
+	//testByteArray := []byte("test")
+	//signature_p.CreateSignature(testByteArray)
 
 
 

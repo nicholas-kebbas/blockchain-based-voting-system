@@ -8,5 +8,4 @@ import (
 
 func TestNonces(t *testing.T) {
 	p3.RandSeed()
-	p3.StartTryingNonces()
 }

@@ -1,10 +1,9 @@
-package data
+package p3
 
 import (
 	"errors"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
-	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3"
 	"sync"
 )
 
