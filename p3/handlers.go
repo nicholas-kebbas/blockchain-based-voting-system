@@ -2,19 +2,13 @@ package p3
 
 import (
 	"bufio"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	crand "crypto/rand"
-	"crypto/sha256"
-	"encoding/asn1"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/signature_p"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/voting"
-	"golang.org/x/crypto/ripemd160"
 	"io/ioutil"
 	"math/big"
 	"math/rand"
@@ -34,10 +28,6 @@ var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
 var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
 var SELF_ADDR string
 /* Need to introduce a private key so we can properly do signatures */
-var PRIVATE_KEY = new(ecdsa.PrivateKey)
-var PUBLIC_KEY = []byte{}
-var HASHED_PUBLIC_KEY = []byte{}
-var SIGNATURE = []byte{}
 var FOUNDREMOTE = false
 var CREATED = false
 /* Adding permissioning to blockchain */
@@ -49,8 +39,7 @@ In production, we can actually keep a seperate list of predetermined allowed (Pu
  /* Only these IDs are allowed to write. This gives the semblance of a permissioned blockchain */
 var ALLOWED_IDS = map[int32]bool {
 	6688:true,
-	6669:true,
-	6670:true,
+	6678:true,
 }
 
 /* Need to check this ID whenever write attempts are made, i.e. upon creation.
@@ -92,25 +81,27 @@ func init() {
 	ifStarted = false
 	/* Public and Private Key need to be created upon Node initialization */
 	/* Need to generate a Curve first with the elliptic library, then generate key based on that curve */
-	GeneratePublicAndPrivateKey()
+	signature_p.GeneratePublicAndPrivateKey()
 
 }
 
 // Register ID, download BlockChain, start HeartBeat
 func Start(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(ID)
 	/* Check if node is in set of Allowed IDs */
-	if _, ok := ALLOWED_IDS[ID]; ok {
-		/* Get address and ID */
-		if ifStarted != true {
-			splitHostPort := strings.Split(r.Host, ":")
-			i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
-			if err != nil {
-				w.WriteHeader(500)
-				panic(err)
-			}
-			/* ID is now port number. Address is now correct Address */
-			ID = int32(i)
-			SELF_ADDR = r.Host
+
+	/* Get address and ID */
+	if ifStarted != true {
+		splitHostPort := strings.Split(r.Host, ":")
+		i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
+		if err != nil {
+			w.WriteHeader(500)
+			panic(err)
+		}
+		/* ID is now port number. Address is now correct Address */
+		ID = int32(i)
+		SELF_ADDR = r.Host
+		if _, ok := ALLOWED_IDS[ID]; ok {
 			RandSeed()
 			/* Need to instantiate the peer list */
 			if len(Peers.Copy()) == 0 {
@@ -123,12 +114,17 @@ func Start(w http.ResponseWriter, r *http.Request) {
 				Download()
 			}
 			/* Call down the voting ballot */
+			fmt.Println("Start Heartbeat")
 			go StartHeartBeat()
+			fmt.Println("Start Voting Process")
 			go StartVotingProcess()
 			ifStarted = true
+		} else {
+				fmt.Println("Not an allowed ID")
 		}
 	}
 }
+
 
 // Display peerList and sbc
 func Show (w http.ResponseWriter, r *http.Request) {
@@ -160,8 +156,8 @@ func Create (w http.ResponseWriter, r *http.Request) {
 			mpt := p1.MerklePatriciaTrie{}
 			mpt.Initial()
 			/* First block does not need to be verified, rest do */
-			mpt.Insert("Initial", "Value")
-			newBlockChain.GenBlock(mpt)
+			mpt.Insert("1", "Origin")
+			newBlockChain.GenBlock(mpt, signature_p.PUBLIC_KEY, signature_p.SIGNATURE)
 			/* Set Global variable SBC to be this new blockchain */
 			SBC = newBlockChain
 			/* Generate Multiple Blocks Initially */
@@ -230,7 +226,9 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, blockChainJson)
 }
 
-/* Download the uploaded ballot from other Nodes */
+/* Download the uploaded ballot from other Nodes.
+
+We should save this data to a Ballot Class, like we did with Blockchain. */
 func DownloadBallot(w http.ResponseWriter, r *http.Request) {
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	/* Need to figure out what to send here in the request */
@@ -239,21 +237,25 @@ func DownloadBallot(w http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	/* Instantiate and grab the blockchain */
-	fmt.Fprint(w, body)
-	fmt.Println(body)
+	ballot := voting.FromJson(string(body))
+	BALLOT = ballot
+	fmt.Println(string(body))
 }
 
 /* POST the contents of the ballot so other nodes can download. Read from ballot.json */
 func UploadBallot(w http.ResponseWriter, r *http.Request) {
 	/* Read the JSON File */
 	plan, _ := ioutil.ReadFile("ballot.json")
-	var data interface{}
-	err := json.Unmarshal(plan, &data)
-	if err != nil {
-		fmt.Println("Error")
-	}
-	fmt.Fprint(w, plan)
+	ballot := voting.FromJson(string(plan))
+	BALLOT = ballot
+	fmt.Fprint(w, ballot.ToJson())
 	fmt.Println(plan)
+}
+
+/* Show the contents of the ballot */
+func ShowBallot(w http.ResponseWriter, r *http.Request) {
+	/* Read the JSON File */
+	fmt.Fprint(w, BALLOT.ToJson())
 }
 
 //  If you have the block, return the JSON string of the specific block; if you don't have the block,
@@ -280,7 +282,6 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(204)
 	}
-
 }
 
 /* Pretty Print the canonical chain */
@@ -361,15 +362,18 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 */
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("In Heart Beat Receive 1")
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
 	var t data.HeartBeatData
+	fmt.Println(string(body))
 	err = json.Unmarshal(body, &t)
 	if err != nil {
+		fmt.Println("Error Unmarshalling in Heart Beat Receive")
 		panic(err)
 	}
+	fmt.Println("In Heart Beat Receive 2")
 	/* Adding Sender to peer list as well as Sender's Peerlist */
 	Peers.Add(t.Addr, t.Id)
 	Peers.InjectPeerMapJson(t.PeerMapJson, SELF_ADDR)
@@ -377,9 +381,14 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 	if t.IfNewBlock == true {
 		/* If it contains new block, check if our blockchain has parent */
 		newBlock := p2.Block{}
+		fmt.Println("Decoding from JSON")
+		fmt.Println(t.BlockJson)
 		newBlock = newBlock.DecodeFromJson(t.BlockJson)
+		fmt.Println("New Block")
+		fmt.Println(newBlock)
 		/* First verify the Signature, then do the other steps */
-		if VerifySignature(newBlock) {
+		if signature_p.VerifySignature(newBlock) {
+			fmt.Println("Signature Verified")
 			FOUNDREMOTE = true
 			if SBC.CheckParentHash(newBlock) == false {
 				/* So we're looking for the parent here and adding it if we don't have it.*/
@@ -437,6 +446,7 @@ func AskForBlock(height int32, hash string) {
 
 /* Send to all the peers. Will probably want to send a post request to their ReceiveHeartBeat */
 func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
+	fmt.Println("Forward Heart Beat")
 	/* Need to rebalance before send. Makes the most sense to do it here */
 	Peers.Rebalance()
 	/* Get the peerMap */
@@ -486,102 +496,6 @@ func StartVotingProcess() {
 	} /* End outer while. This will never end unless node is stopped. */
 }
 
-/* Need to implement basic signatures first. */
-
-/* In order to sign data, we need the data to sign.
-
-So we need to take that as input. This is probably MPT
-
-*/
-
-/* Take the hash of the MPT and encrypt it */
-/* We will need to add a Signature and a Public Key parameter to the Block */
-func SignTransaction(value string) {
-	transaction := []byte (value)
-	r := big.NewInt(0)
-	s := big.NewInt(0)
-	serr := errors.New("Error")
-	/* Returns Big Ints r and s
-	*/
-	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
-	if serr != nil {
-		fmt.Println("Error")
-		os.Exit(1)
-	}
-
-	/* Need to figure out how to get the r and s values from the signature on the blockchain */
-
-	/*
-	The signature is a combination of the author's private key and the content of
-	the document it certifies
-	 */
-	SIGNATURE = r.Bytes()
-	SIGNATURE = append(SIGNATURE, s.Bytes()...)
-}
-
-/* To verify the data, we need
-1. The data that was signed
-2. The signature
-3. The Public Key
-
-So we need to add that to the Block
-Will likely take as input the signature
-*/
-func VerifySignature(block p2.Block) bool{
-	e := &ECDSASignature{}
-	_, err := asn1.Unmarshal([]byte(block.Header.Signature), e)
-	if err != nil {
-		fmt.Println("Error Unmarshaling Block")
-		return false
-	}
-	/* Currently a bug here */
-	verified := ecdsa.Verify(&block.Header.PublicKey, []byte(block.GetMptRoot()), e.R, e.S)
-	return verified
-}
-
-
-
-/* Generate the keys we need for the addresses, signature, etc.
-
-In elliptic curve based algorithms, public keys are points on a curve.
-A public key is a combination of X, Y coordinates.
-
-PUBLIC_KEY should be stored as a byte array since it's easier to
-work with that way.
-
-*/
-
-
-func GeneratePublicAndPrivateKey() {
-	c := elliptic.P256()
-	PRIVATE_KEY, _ = ecdsa.GenerateKey(c, crand.Reader)
-	PUBLIC_KEY = append(PRIVATE_KEY.PublicKey.X.Bytes(), PRIVATE_KEY.PublicKey.Y.Bytes()...)
-}
-
-/* Hash the public key to display on the blockchain. This is how BTC does it */
-/* TODO: Implement this function for additional ***security*** and ***privacy***! */
-func HashPublicKey(publicKey []byte) []byte {
-	publicSHA256 := sha256.Sum256(publicKey)
-	ripemd160Hasher := ripemd160.New()
-	_, err := ripemd160Hasher.Write(publicSHA256[:])
-
-	if err != nil {
-		fmt.Println("Cannot Hash Public Key")
-		os.Exit(1)
-	}
-
-	hashedPublicKey := ripemd160Hasher.Sum(nil)
-	return hashedPublicKey
-}
-
-/* Merges transaction with other transactions on the chain to maintain anonymity */
-func RingSignature() string {
-	ringSignature := ""
-
-	return ringSignature
-
-}
-
 /*
 
 Changed so there's User Input Required Now
@@ -601,18 +515,31 @@ func GenerateVotingMpt() p1.MerklePatriciaTrie {
 		text = scanner.Text()
 		if text != "q" {
 			fmt.Println("You voted for ", text)
+			/* Just allow voting once for now */
+			break
 		}
 	}
 	fmt.Println("Thanks for voting!")
 	/* Record the Vote in the MPT. Value can be vote value. Key will be the
 	public key i think.
 	*/
-	mpt.Insert(text, text)
+	mpt.Insert("1", text)
 
 	if scanner.Err() != nil {
 		// handle error.
 	}
+	fmt.Println("MPT")
+	vote, _ := mpt.Get("1")
+	fmt.Println(vote)
 	return mpt
+}
+
+func ShowMPT(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "%s\n", SBC.ShowMPT())
+}
+
+func CountVotes() {
+
 }
 
 func RandSeed() {

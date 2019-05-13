@@ -20,7 +20,7 @@ type Header struct {
 	Height     int32 `json:"height"`
 	ParentHash string `json:"parentHash"`
 	Size       int32 `json:"size"`
-	Signature  string `json:"signature"`
+	Signature  string `json:"signature_p"`
 	PublicKey  string `json:"publickey"`
 }
 
@@ -41,7 +41,7 @@ type JsonBlock struct {
 	Nonce      string            `json:"nonce"`
 	MPT        map[string]string `json:"mpt"`
 	PublicKey  string `json:"publickey"`
-	Signature  string `json:"signature"`
+	Signature  string `json:"signature_p"`
 }
 
 /**
@@ -58,11 +58,11 @@ func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatr
 	newValue := Value{mpt, mpt.GetStringDb()}
 	newBlock := Block{newHeader, newValue}
 	return newBlock
-
 }
 
 /** Note that you have to reconstruct an MPT from the JSON string, and use that MPT as the block's value. **/
 func (block *Block) DecodeFromJson(jsonString string) Block {
+	fmt.Println("Decoding block from JSON")
 	bytes := []byte(jsonString)
 	b := Block{}
 	j := JsonBlock{}
@@ -71,6 +71,7 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 		fmt.Println("Error in DecodeFromJson in Block")
 	}
 	/* Need to build the MPT to insert into block */
+	fmt.Println("In Decode From Json")
 	m := p1.MerklePatriciaTrie{}
 	m.Initial()
 	for k, v := range j.MPT {
@@ -85,6 +86,7 @@ func (block *Block) DecodeFromJson(jsonString string) Block {
 	b.Header.PublicKey = j.PublicKey
 	b.Value.mpt = m
 	b.Value.StringDb = j.MPT
+	fmt.Println(b)
 	return b
 }
 

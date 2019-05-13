@@ -177,4 +177,29 @@ func (bc *BlockChain) Show() string {
 	return rs
 }
 
+func (bc *BlockChain) ShowMPT() string {
+	rs := ""
+	var idList []int
+	for id := range bc.Chain {
+		idList = append(idList, int(id))
+	}
+	sort.Ints(idList)
+	for _, id := range idList {
+		var hashs []string
+		for _, block := range bc.Chain[int32(id)] {
+			voteValue, _ := block.Value.mpt.Get("1")
+			hashs = append(hashs, block.Header.Hash + "<=" + voteValue)
+		}
+		sort.Strings(hashs)
+		rs += fmt.Sprintf("%v: ", id)
+		for _, h := range hashs {
+			rs += fmt.Sprintf("%s, ", h)
+		}
+		rs += "\n"
+	}
+	sum := sha3.Sum256([]byte(rs))
+	rs = fmt.Sprintf("This is the BlockChain: %s\n", hex.EncodeToString(sum[:])) + rs
+	return rs
+}
+
 

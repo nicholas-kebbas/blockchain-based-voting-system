@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="0eb5fd9f-63a5-4420-bc46-0ba3215ad725" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/ballot.json" beforeDir="false" afterPath="$PROJECT_DIR$/ballot.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main" beforeDir="false" afterPath="$PROJECT_DIR$/main" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p2/Block.go" beforeDir="false" afterPath="$PROJECT_DIR$/p2/Block.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p2/BlockChain.go" beforeDir="false" afterPath="$PROJECT_DIR$/p2/BlockChain.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p3/data/SyncBlockChain.go" beforeDir="false" afterPath="$PROJECT_DIR$/p3/data/SyncBlockChain.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p3/data/heartbeat.go" beforeDir="false" afterPath="$PROJECT_DIR$/p3/data/heartbeat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p3/handlers.go" beforeDir="false" afterPath="$PROJECT_DIR$/p3/handlers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/p3/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/p3/routes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/signature_p/Signature.go" beforeDir="false" afterPath="$PROJECT_DIR$/signature_p/Signature.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/blockchain_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/blockchain_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/signature_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/signature_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/voting/ballot.go" beforeDir="false" afterPath="$PROJECT_DIR$/voting/ballot.go" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="cs686-blockchain-p3-nicholas-kebbas" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p2/BlockChain.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="48">
+              <caret line="61" column="19" selection-start-line="61" selection-start-column="19" selection-end-line="61" selection-end-column="19" />
+              <folding>
+                <element signature="e#12#108#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p3/data/SyncBlockChain.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="100" column="41" selection-start-line="100" selection-start-column="41" selection-end-line="100" selection-end-column="41" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p3/handlers.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1181">
+              <caret line="159" column="53" lean-forward="true" selection-start-line="159" selection-start-column="53" selection-end-line="159" selection-end-column="53" />
+              <folding>
+                <element signature="e#12#559#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p2/Block.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1644">
+              <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="19" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/signature_p/Signature.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="576">
+              <caret line="52" column="23" selection-start-line="52" selection-start-column="23" selection-end-line="52" selection-end-column="23" />
+              <folding>
+                <element signature="e#21#258#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/tests/signature_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="329">
+              <caret line="40" column="51" selection-start-line="40" selection-start-column="51" selection-end-line="40" selection-end-column="51" />
+              <folding>
+                <element signature="e#15#326#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p1/MerklePatriciaTrie.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="1193" selection-start-line="1193" selection-end-line="1193" />
+              <folding>
+                <element signature="e#12#105#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/p3/data/heartbeat.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="497">
+              <caret line="40" column="12" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>rand</find>
+      <find>prepare</find>
+      <find>canonical</find>
+      <find>get</find>
+      <find>getPeer</find>
+      <find>fmt.P</find>
+      <find>askfor</find>
+      <find>size</find>
+      <find>Recei</find>
+      <find>generateMP</find>
+      <find>hash</find>
+      <find>genBlock</find>
+      <find>error</find>
+      <find>error un</find>
+    </findStrings>
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/p3/data/register.go" />
+        <option value="$PROJECT_DIR$/tests/mpt_test.go" />
+        <option value="$PROJECT_DIR$/p3/router.go" />
+        <option value="$PROJECT_DIR$/tests/gossip_test.go" />
+        <option value="$PROJECT_DIR$/main.go" />
+        <option value="$PROJECT_DIR$/tests/latest_blocks_test.go" />
+        <option value="$PROJECT_DIR$/p3/data/peerList.go" />
+        <option value="$PROJECT_DIR$/voting/Ballot.go" />
+        <option value="$PROJECT_DIR$/ring/ring.go" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/p3/SyncBlockChain.go" />
+        <option value="$PROJECT_DIR$/signature/Signature.go" />
+        <option value="$PROJECT_DIR$/p3/data/heartbeat.go" />
+        <option value="$PROJECT_DIR$/tests/canonical_test.go" />
+        <option value="$PROJECT_DIR$/voting/ballot.go" />
+        <option value="$PROJECT_DIR$/ballot.json" />
+        <option value="$PROJECT_DIR$/tests/ballot_test.go" />
+        <option value="$PROJECT_DIR$/p2/BlockChain.go" />
+        <option value="$PROJECT_DIR$/p3/routes.go" />
+        <option value="$PROJECT_DIR$/tests/blockchain_test.go" />
+        <option value="$PROJECT_DIR$/p2/Block.go" />
+        <option value="$PROJECT_DIR$/p3/handlers.go" />
+        <option value="$PROJECT_DIR$/p3/data/SyncBlockChain.go" />
+        <option value="$PROJECT_DIR$/signature_p/Signature.go" />
+        <option value="$PROJECT_DIR$/tests/signature_test.go" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-46" />
+    <option name="y" value="37" />
+    <option name="width" value="1268" />
+    <option name="height" value="773" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="462c0819:PsiDirectoryNode" />
+              <item name="p3" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="462c0819:PsiDirectoryNode" />
+              <item name="p3" type="462c0819:PsiDirectoryNode" />
+              <item name="data" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="b2602c69:ProjectViewProjectNode" />
+              <item name="cs686-blockchain-p3-nicholas-kebbas" type="462c0819:PsiDirectoryNode" />
+              <item name="tests" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.gopath.indexing.explicitly.defined" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/p3/data" />
+      <recent name="$PROJECT_DIR$/p3" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/p2" />
+      <recent name="$PROJECT_DIR$/p1" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Go Test.signature_test.go">
+    <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="cs686-blockchain-p3-nicholas-kebbas" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/main.go" />
+      <package value="github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas" />
+      <directory value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <configuration name="ballot_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="cs686-blockchain-p3-nicholas-kebbas" />
+      <working_directory value="$PROJECT_DIR$/tests" />
+      <framework value="gotest" />
+      <kind value="FILE" />
+      <package value="github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/tests/ballot_test.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="blockchain_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="cs686-blockchain-p3-nicholas-kebbas" />
+      <working_directory value="$PROJECT_DIR$/tests" />
+      <framework value="gotest" />
+      <kind value="FILE" />
+      <package value="github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/tests/blockchain_test.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="latest_blocks_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="cs686-blockchain-p3-nicholas-kebbas" />
+      <working_directory value="$PROJECT_DIR$/tests" />
+      <framework value="gotest" />
+      <kind value="FILE" />
+      <package value="github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/tests/latest_blocks_test.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="signature_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="cs686-blockchain-p3-nicholas-kebbas" />
+      <working_directory value="$PROJECT_DIR$/tests" />
+      <framework value="gotest" />
+      <kind value="FILE" />
+      <package value="github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/tests/signature_test.go" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.signature_test.go" />
+        <item itemvalue="Go Test.blockchain_test.go" />
+        <item itemvalue="Go Test.ballot_test.go" />
+        <item itemvalue="Go Build.go build main.go" />
+        <item itemvalue="Go Test.latest_blocks_test.go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TestHistory">
+    <history-entry file="signature_test_go - 2019.05.12 at 16h 56m 48s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 16h 57m 55s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 16h 58m 24s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 00m 20s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 00m 30s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 12m 12s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 21m 58s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 29m 40s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 31m 52s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="signature_test_go - 2019.05.12 at 17h 32m 09s.xml">
+      <configuration name="signature_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-46" y="37" width="1268" height="773" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.55936074" visible="true" weight="0.29526916" />
+      <window_info id="Structure" order="1" sideWeight="0.44063926" side_tool="true" visible="true" weight="0.29526916" />
+      <window_info id="Favorites" order="2" sideWeight="0.33796296" side_tool="true" weight="0.28151986" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32760897" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49072513" visible="true" weight="0.35682818" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" order="8" />
+      <window_info anchor="bottom" id="Version Control" order="9" />
+      <window_info anchor="bottom" id="Terminal" order="10" />
+      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.5092749" side_tool="true" weight="0.312769" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Database" order="3" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/tests/mpt_tests/ext_.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../project1MerklePatriciaTree/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor />
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../project1MerklePatriciaTree/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="28">
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
+          <folding>
+            <element signature="e#14#115#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/go/src/net/http/server.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="1745" selection-start-line="1745" selection-end-line="1745" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/logger.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#12#49#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/go/src/testing/testing.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="11625">
+          <caret line="791" selection-start-line="791" selection-end-line="791" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/data/peerList.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="184" column="31" selection-start-line="184" selection-start-column="31" selection-end-line="184" selection-end-column="31" />
+          <folding>
+            <element signature="e#14#93#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/router.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
+          <folding>
+            <element signature="e#12#60#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/gossip_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="675">
+          <caret line="50" column="4" selection-start-line="50" selection-start-column="4" selection-end-line="50" selection-end-column="51" />
+          <folding>
+            <element signature="e#15#128#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/latest_blocks_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="27" column="5" lean-forward="true" selection-start-line="21" selection-start-column="4" selection-end-line="27" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/mpt_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="385">
+          <caret line="186" column="11" selection-start-line="186" selection-start-column="11" selection-end-line="186" selection-end-column="11" />
+          <folding>
+            <element signature="e#15#125#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="-209">
+            <caret line="104" column="72" selection-start-line="104" selection-start-column="72" selection-end-line="104" selection-end-column="72" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ring/ring.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/data/register.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="12" selection-start-column="12" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="35" selection-start-line="3" selection-start-column="35" selection-end-line="3" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/voting/ballot.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-43">
+          <caret line="14" column="17" lean-forward="true" selection-start-line="14" selection-start-column="17" selection-end-line="14" selection-end-column="17" />
+          <folding>
+            <element signature="e#16#50#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/ballot_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="13" lean-forward="true" selection-start-column="13" selection-end-column="13" />
+          <folding>
+            <element signature="e#15#140#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ballot.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="9" lean-forward="true" selection-start-column="9" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/canonical_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" column="17" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
+          <folding>
+            <element signature="e#15#105#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/data/heartbeat.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="497">
+          <caret line="40" column="12" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p2/BlockChain.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="61" column="19" selection-start-line="61" selection-start-column="19" selection-end-line="61" selection-end-column="19" />
+          <folding>
+            <element signature="e#12#108#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/routes.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="318">
+          <caret line="78" column="15" selection-start-line="78" selection-start-column="15" selection-end-line="78" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/blockchain_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-342">
+          <caret line="11" column="1196" selection-start-line="11" selection-start-column="1196" selection-end-line="11" selection-end-column="1196" />
+          <folding>
+            <element signature="e#15#140#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p1/MerklePatriciaTrie.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="1193" selection-start-line="1193" selection-end-line="1193" />
+          <folding>
+            <element signature="e#12#105#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/data/SyncBlockChain.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="100" column="41" selection-start-line="100" selection-start-column="41" selection-end-line="100" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p3/handlers.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1181">
+          <caret line="159" column="53" lean-forward="true" selection-start-line="159" selection-start-column="53" selection-end-line="159" selection-end-column="53" />
+          <folding>
+            <element signature="e#12#559#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/p2/Block.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1644">
+          <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/signature_p/Signature.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="576">
+          <caret line="52" column="23" selection-start-line="52" selection-start-column="23" selection-end-line="52" selection-end-column="23" />
+          <folding>
+            <element signature="e#21#258#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/signature_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="329">
+          <caret line="40" column="51" selection-start-line="40" selection-start-column="51" selection-end-line="40" selection-end-column="51" />
+          <folding>
+            <element signature="e#15#326#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

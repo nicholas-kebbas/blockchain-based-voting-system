@@ -66,4 +66,16 @@ var routes = Routes{
 		"/upload-ballot",
 		UploadBallot,
 	},
+	Route{
+		"ShowBallot",
+		"GET",
+		"/show-ballot",
+		ShowBallot,
+	},
+	Route{
+		"ShowVotes",
+		"GET",
+		"/show-votes",
+		ShowMPT,
+	},
 }

@@ -5,18 +5,24 @@ import (
 	"crypto/elliptic"
 	crand "crypto/rand"
 	"crypto/sha256"
-	"encoding/asn1"
-	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"golang.org/x/crypto/ripemd160"
+	"log"
 	"math/big"
 	"os"
-	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 )
 
-var PUBLIC_KEY = []byte{}
+
+var PUBLIC_KEY= []byte{}
+var PUBLIC_KEY_HEX = ""
 var PRIVATE_KEY = new(ecdsa.PrivateKey)
+var PRIVATE_KEY_BYTES = []byte{}
+var PRIVATE_KEY_HEX = ""
 var SIGNATURE = []byte{}
+var SIGNATURE_HEX = ""
 
 /* Need to make a ECDSASignature struct to verify */
 type ECDSASignature struct {
@@ -34,27 +40,23 @@ So we need to take that as input. This is probably MPT
 /* Take the hash of the MPT and encrypt it */
 /* We will need to add a Signature and a Public Key parameter to the Block */
 
-func SignTransaction(value string) {
+/* Return the hex signature */
+func SignTransaction(value string) []byte{
 	transaction := []byte (value)
-	r := big.NewInt(0)
-	s := big.NewInt(0)
-	serr := errors.New("Error")
-	/* Returns Big Ints r and s
-	*/
-	r, s, serr = ecdsa.Sign(crand.Reader, PRIVATE_KEY, transaction)
-	if serr != nil {
-		fmt.Println("Error")
-		os.Exit(1)
+	/* Hash this again. May only need to hash it once but lib wants it as 32 bits */
+	hash := crypto.Keccak256Hash(transaction)
+	/* Generate Signature as well */
+	signature, err := crypto.Sign(hash.Bytes(), PRIVATE_KEY)
+	if err != nil {
+		log.Fatal(err)
 	}
+	SIGNATURE = signature
+	SIGNATURE_HEX = hexutil.Encode(signature)
+	fmt.Println("Signature hex")
+	fmt.Println(SIGNATURE_HEX)
+	/* Try the hex version but shouldn't be any different */
+	return signature
 
-	/* Need to figure out how to get the r and s values from the signature_p on the blockchain */
-
-	/*
-	The signature_p is a combination of the author's private key and the content of
-	the document it certifies
-	 */
-	SIGNATURE = r.Bytes()
-	SIGNATURE = append(SIGNATURE, s.Bytes()...)
 }
 
 /* To verify the data, we need
@@ -65,16 +67,16 @@ func SignTransaction(value string) {
 So we need to add that to the Block
 Will likely take as input the signature_p
 */
-func VerifySignature(block p2.Block) bool{
-	e := &ECDSASignature{}
-	_, err := asn1.Unmarshal([]byte(block.Header.Signature), e)
-	if err != nil {
-		fmt.Println("Error Unmarshaling Block")
-		return false
-	}
-	/* Currently a bug here */
-	//verified := ecdsa.Verify(&block.Header.PublicKey, []byte(block.GetMptRoot()), e.R, e.S)
-	return true
+func VerifySignature(block p2.Block) bool {
+	fmt.Println("Verify: Signature in Block")
+	fmt.Println(block.Header.Signature)
+	hash := crypto.Keccak256Hash([]byte(block.GetMptRoot()))
+	signatureNoRecoverID := block.Header.Signature[:len(block.Header.Signature)-1] // remove recovery ID
+	verified := crypto.VerifySignature([]byte(block.Header.PublicKey), hash.Bytes(), []byte(signatureNoRecoverID))
+	test_sig, _ := crypto.Sign(hash.Bytes(), PRIVATE_KEY)
+	fmt.Println("Verified Signature")
+	fmt.Println(hexutil.Encode(test_sig))
+	return verified
 }
 
 /* Generate the keys we need for the addresses, signature_p, etc.
@@ -91,7 +93,15 @@ work with that way.
 func GeneratePublicAndPrivateKey() {
 	c := elliptic.P256()
 	PRIVATE_KEY, _ = ecdsa.GenerateKey(c, crand.Reader)
-	PUBLIC_KEY = append(PRIVATE_KEY.PublicKey.X.Bytes(), PRIVATE_KEY.PublicKey.Y.Bytes()...)
+	PRIVATE_KEY_BYTES = PRIVATE_KEY.D.Bytes()
+	PRIVATE_KEY_HEX = hexutil.Encode(PRIVATE_KEY_BYTES)[2:]
+	publicKey := PRIVATE_KEY.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("error casting public key to ECDSA")
+	}
+	PUBLIC_KEY = crypto.FromECDSAPub(publicKeyECDSA)
+	PUBLIC_KEY_HEX = hexutil.Encode(PUBLIC_KEY)[4:]
 }
 
 /* Hash the public key to display on the blockchain. This is how BTC does it */
