@@ -70,12 +70,14 @@ Will likely take as input the signature_p
 func VerifySignature(block p2.Block) bool {
 	fmt.Println("Verify: Signature in Block")
 	fmt.Println(block.Header.Signature)
+	decodedSig, _ := hexutil.Decode(block.Header.Signature)
 	hash := crypto.Keccak256Hash([]byte(block.GetMptRoot()))
-	signatureNoRecoverID := block.Header.Signature[:len(block.Header.Signature)-1] // remove recovery ID
-	verified := crypto.VerifySignature([]byte(block.Header.PublicKey), hash.Bytes(), []byte(signatureNoRecoverID))
-	test_sig, _ := crypto.Sign(hash.Bytes(), PRIVATE_KEY)
+	sigPublicKey, _ := crypto.Ecrecover(hash.Bytes(), decodedSig)
+	signatureNoRecoverID := decodedSig[:len(decodedSig)-1] // remove recovery ID
+	verified := crypto.VerifySignature(sigPublicKey, hash.Bytes(), []byte(signatureNoRecoverID))
+
 	fmt.Println("Verified Signature")
-	fmt.Println(hexutil.Encode(test_sig))
+	fmt.Println(verified)
 	return verified
 }
 

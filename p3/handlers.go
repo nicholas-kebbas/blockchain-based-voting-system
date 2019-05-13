@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
@@ -157,7 +158,8 @@ func Create (w http.ResponseWriter, r *http.Request) {
 			mpt.Initial()
 			/* First block does not need to be verified, rest do */
 			mpt.Insert("1", "Origin")
-			newBlockChain.GenBlock(mpt, signature_p.PUBLIC_KEY, signature_p.SIGNATURE)
+			hexPubKey := hexutil.Encode(signature_p.PUBLIC_KEY)
+			newBlockChain.GenBlock(mpt, hexPubKey)
 			/* Set Global variable SBC to be this new blockchain */
 			SBC = newBlockChain
 			/* Generate Multiple Blocks Initially */
@@ -362,18 +364,15 @@ call ForwardHeartBeat() to forward this heartBeat to all peers.
 */
 
 func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("In Heart Beat Receive 1")
 	/* Parse the request and add peers to this node's peer map */
 	body, err := ioutil.ReadAll(r.Body)
 	/* Send POST request to /upload with Address and ID data. Then populate the peer list */
 	var t data.HeartBeatData
-	fmt.Println(string(body))
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		fmt.Println("Error Unmarshalling in Heart Beat Receive")
 		panic(err)
 	}
-	fmt.Println("In Heart Beat Receive 2")
 	/* Adding Sender to peer list as well as Sender's Peerlist */
 	Peers.Add(t.Addr, t.Id)
 	Peers.InjectPeerMapJson(t.PeerMapJson, SELF_ADDR)
@@ -406,6 +405,8 @@ func HeartBeatReceive(w http.ResponseWriter, r *http.Request) {
 			FOUNDREMOTE = false
 			/* Stop our own search for nonce and start it again with new parent */
 
+		} else {
+			fmt.Println("Verification Failed")
 		}
 	}
 }
@@ -490,7 +491,7 @@ func StartVotingProcess() {
 		/* Create an MPT. This will block the calling thread. */
 		mpt := GenerateVotingMpt()
 
-		/*  Don't need to do the nonce stuff anymore */
+
 		SendBlock(mpt)
 
 	} /* End outer while. This will never end unless node is stopped. */

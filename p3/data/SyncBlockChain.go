@@ -2,7 +2,7 @@ package data
 
 import (
 	"errors"
-	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p2"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/signature_p"
@@ -78,29 +78,25 @@ func(sbc *SyncBlockChain) BlockChainToJson() (string, error) {
 }
 
 /* Create a new block to add to Sync. Blockchain */
-func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie, public_key []byte, signature []byte) p2.Block {
+func(sbc *SyncBlockChain) GenBlock(mpt p1.MerklePatriciaTrie, public_key string) p2.Block {
 	sbc.mux.Lock()
 	defer sbc.mux.Unlock()
 	height := sbc.bc.Length
 	if height == 0 {
 		sbc.bc = p2.NewBlockChain()
 		/* We have our Public Key Stored in signature_p */
-
-		signature = signature_p.SignTransaction(mpt.GetRoot())
-		fmt.Println("Signature in Gen Block")
-		fmt.Println(signature)
-		newBlock := p2.Initial(1, 123, "Genesis", mpt, public_key, signature)
-
+		signatureBytes := signature_p.SignTransaction(mpt.GetRoot())
+		sigHex := hexutil.Encode(signatureBytes)
+		newBlock := p2.Initial(1, 123, "Genesis", mpt, public_key, sigHex)
 		sbc.bc.Insert(newBlock)
 		return newBlock
 	}
 	latestBlock := sbc.bc.Get(height)[0]
 
 	/* Add height because it's a new block, child block of parent */
-	signature = signature_p.SignTransaction(mpt.GetRoot())
-	fmt.Println("Signature in Gen Block")
-	fmt.Println(signature)
-	newBlock := p2.Initial(height + 1, 123, latestBlock.Header.Hash, mpt, public_key, signature)
+	signatureBytes := signature_p.SignTransaction(mpt.GetRoot())
+	sigHex := hexutil.Encode(signatureBytes)
+	newBlock := p2.Initial(height + 1, 123, latestBlock.Header.Hash, mpt, public_key, sigHex)
 	sbc.bc.Insert(newBlock)
 	return newBlock
 }

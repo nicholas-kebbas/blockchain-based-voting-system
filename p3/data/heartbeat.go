@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/signature_p"
 )
@@ -35,7 +36,8 @@ func PrepareHeartBeatData(sbc *SyncBlockChain, selfId int32, peerMapJson string,
 		heartBeatData := NewHeartBeatData(true, selfId, " ", peerMapJson, addr)
 		/* Just get the first one in that array for now since we don't know what to do w/ forks */
 		/* This is adding to own fine. Maybe overwriting parent */
-		newBlock := sbc.GenBlock(trie, signature_p.PUBLIC_KEY, signature_p.SIGNATURE)
+		sigPubKey := hexutil.Encode(signature_p.PUBLIC_KEY)
+		newBlock := sbc.GenBlock(trie, sigPubKey)
 		heartBeatData.BlockJson = newBlock.EncodeToJSON()
 		return heartBeatData
 	} else {

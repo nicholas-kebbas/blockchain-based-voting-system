@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p1"
 	"github.com/nicholas-kebbas/cs686-blockchain-p3-nicholas-kebbas/p3/data"
@@ -17,8 +18,8 @@ func TestSignature(t *testing.T) {
 	mpt.Initial()
 	/* First block does not need to be verified, rest do */
 	mpt.Insert("1", "Origin")
-	newBlockChain.GenBlock(mpt, signature_p.PUBLIC_KEY, signature_p.SIGNATURE)
-	signature_p.SignTransaction(mpt.GetRoot())
+	hexPubKey := hexutil.Encode(signature_p.PUBLIC_KEY)
+	newBlockChain.GenBlock(mpt, hexPubKey)
 	/* So now we have the signed thing, let's verify */
 	block, _ := newBlockChain.Get(1)
 	match := signature_p.VerifySignature(block[0])

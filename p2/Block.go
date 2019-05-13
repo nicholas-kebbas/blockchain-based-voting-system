@@ -48,13 +48,11 @@ type JsonBlock struct {
 This function takes arguments(such as height, parentHash, and value of MPT type)
 and forms a block.
  */
-func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatriciaTrie, publicKey []byte, signature []byte) Block {
+func Initial(height int32, timestamp int64, parentHash string, mpt p1.MerklePatriciaTrie, publicKey string, signature string) Block {
 	hash := deriveHash(height, timestamp, parentHash, mpt)
 	size := len([]byte(fmt.Sprintf("%v", mpt)))
-	publicKeyString := string(publicKey)
-	signatureString := string(signature)
 	size32 := int32(size)
-	newHeader := Header{hash, timestamp, height, parentHash, size32, signatureString, publicKeyString}
+	newHeader := Header{hash, timestamp, height, parentHash, size32, signature, publicKey}
 	newValue := Value{mpt, mpt.GetStringDb()}
 	newBlock := Block{newHeader, newValue}
 	return newBlock
