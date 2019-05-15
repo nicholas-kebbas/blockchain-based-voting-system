@@ -26,6 +26,8 @@ func (ballot *Ballot) ToJson() string {
 		fmt.Println(err)
 		return ""
 	}
+	fmt.Println("Ballot To JSON")
+	fmt.Println(string(encodedString))
 	return string(encodedString)
 }
 

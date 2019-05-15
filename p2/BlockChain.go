@@ -204,4 +204,22 @@ func (bc *BlockChain) ShowMPT() string {
 	return rs
 }
 
+func (bc *BlockChain) CountVotes(value string) int {
+	counter := 0
+	var idList []int
+	for id := range bc.Chain {
+		idList = append(idList, int(id))
+	}
+	sort.Ints(idList)
+	for _, id := range idList {
+		for _, block := range bc.Chain[int32(id)] {
+			voteValue, _ := block.Value.mpt.Get("1")
+			if voteValue == value {
+				counter++
+			}
+		}
+	}
+	return counter
+}
+
 

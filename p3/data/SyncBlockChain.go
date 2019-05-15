@@ -124,3 +124,9 @@ func(sbc *SyncBlockChain) ShowMPT() string {
 	defer sbc.mux.Unlock()
 	return sbc.bc.ShowMPT()
 }
+
+func (sbc *SyncBlockChain) CountValues(value string) int {
+	sbc.mux.Lock()
+	defer sbc.mux.Unlock()
+	return sbc.bc.CountVotes(value)
+}

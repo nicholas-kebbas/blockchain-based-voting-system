@@ -26,7 +26,7 @@ var FIRST_NODE_ADDRESS = "localhost:6688"
 var FIRST_NODE_PORT int32 = 6688
 var FIRST_NODE = "http://localhost:6688"
 var FIRST_NODE_SERVER = FIRST_NODE + "/upload"
-var FIRST_NODE_BALLOT = FIRST_NODE + "/ballot"
+var FIRST_NODE_BALLOT = FIRST_NODE + "/show-ballot"
 var SELF_ADDR string
 /* Need to introduce a private key so we can properly do signatures */
 var FOUNDREMOTE = false
@@ -84,14 +84,12 @@ func init() {
 	/* Public and Private Key need to be created upon Node initialization */
 	/* Need to generate a Curve first with the elliptic library, then generate key based on that curve */
 	signature_p.GeneratePublicAndPrivateKey()
-
 }
 
 // Register ID, download BlockChain, start HeartBeat
 func Start(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(ID)
 	/* Check if node is in set of Allowed IDs */
-
 	/* Get address and ID */
 	if ifStarted != true {
 		splitHostPort := strings.Split(r.Host, ":")
@@ -125,6 +123,7 @@ func Start(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("Not an allowed ID")
 		}
 	}
+	DownloadBallot()
 }
 
 
@@ -187,6 +186,7 @@ func Create (w http.ResponseWriter, r *http.Request) {
 
 			/* Need to instantiate the peer list */
 			Peers = data.NewPeerList(ID, 32)
+			BALLOT = ReadDataFromBallot()
 			CREATED = true
 		}
 	}
@@ -216,7 +216,6 @@ func Download() {
 
 // Called By Download (POST Request from local node's Download Function)
 func Upload(w http.ResponseWriter, r *http.Request) {
-
 	/* Also store the ID and Address of the incoming request */
 	splitHostPort := strings.Split(r.Host, ":")
 	i, err := strconv.ParseInt(splitHostPort[1], 10, 32)
@@ -248,7 +247,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 /* Download the uploaded ballot from other Nodes.
 
 We should save this data to a Ballot Class, like we did with Blockchain. */
-func DownloadBallot(w http.ResponseWriter, r *http.Request) {
+func DownloadBallot() {
 	/* Just creating trie here so we can use the prepareHeartBeatData Function */
 	/* Need to figure out what to send here in the request */
 	res, _ := http.Get(FIRST_NODE_BALLOT)
@@ -259,16 +258,6 @@ func DownloadBallot(w http.ResponseWriter, r *http.Request) {
 	ballot := voting.FromJson(string(body))
 	BALLOT = ballot
 	fmt.Println(string(body))
-}
-
-/* POST the contents of the ballot so other nodes can download. Read from ballot.json */
-func UploadBallot(w http.ResponseWriter, r *http.Request) {
-	/* Read the JSON File */
-	plan, _ := ioutil.ReadFile("ballot.json")
-	ballot := voting.FromJson(string(plan))
-	BALLOT = ballot
-	fmt.Fprint(w, ballot.ToJson())
-	fmt.Println(plan)
 }
 
 /* Show the contents of the ballot */
@@ -510,10 +499,7 @@ func StartVotingProcess() {
 		/* Get the latest block or one of the latest blocks to use as a parent block. */
 		/* Create an MPT. This will block the calling thread. */
 		mpt := GenerateVotingMpt()
-
-
 		SendBlock(mpt)
-
 	} /* End outer while. This will never end unless node is stopped. */
 }
 
@@ -556,11 +542,30 @@ func GenerateVotingMpt() p1.MerklePatriciaTrie {
 }
 
 func ShowMPT(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hilary Clinton: %v\n", CountVotes("Hilary Clinton"))
+	fmt.Fprintf(w, "Donald Trump: %v\n", CountVotes("Donald Trump"))
 	fmt.Fprintf(w, "%s\n", SBC.ShowMPT())
 }
 
-func CountVotes() {
+func CountVotes(value string) int {
+	votes := SBC.CountValues(value)
+	return votes
+}
 
+func ReadDataFromBallot() voting.Ballot{
+	file, fileErr := os.Open("ballot.json")
+	if fileErr != nil {
+		fmt.Println("error in opening file:", fileErr)
+	}
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	ballot := voting.Ballot{}
+	err := decoder.Decode(&ballot)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(ballot)
+	return ballot
 }
 
 func RandSeed() {

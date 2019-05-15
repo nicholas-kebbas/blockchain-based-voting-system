@@ -55,18 +55,6 @@ var routes = Routes{
 		Canonical,
 	},
 	Route{
-		"DownloadBallot",
-		"GET",
-		"/download-ballot",
-		DownloadBallot,
-	},
-	Route{
-		"UploadBallot",
-		"POST",
-		"/upload-ballot",
-		UploadBallot,
-	},
-	Route{
 		"ShowBallot",
 		"GET",
 		"/show-ballot",
