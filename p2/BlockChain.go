@@ -188,12 +188,14 @@ func (bc *BlockChain) ShowMPT() string {
 		var hashs []string
 		for _, block := range bc.Chain[int32(id)] {
 			voteValue, _ := block.Value.mpt.Get("1")
-			hashs = append(hashs, block.Header.Hash + "<=" + voteValue)
+			hashs = append(hashs, block.Header.Hash + "<=" + voteValue + "\n")
+			hashs = append(hashs, block.Header.Hash + "<= Public Key: " + block.Header.PublicKey + "\n")
+			hashs = append(hashs, block.Header.Hash + "<= Signature: " + block.Header.Signature + "\n")
 		}
 		sort.Strings(hashs)
 		rs += fmt.Sprintf("%v: ", id)
 		for _, h := range hashs {
-			rs += fmt.Sprintf("%s, ", h)
+			rs += fmt.Sprintf("%s ", h)
 		}
 		rs += "\n"
 	}

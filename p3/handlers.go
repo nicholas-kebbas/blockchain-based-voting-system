@@ -67,6 +67,7 @@ type CanonicalChainBlock struct {
 	hash string
 	parentHash string
 	size int32
+	publicKey string
 }
 /* Need to make a ECDSASignature struct to verify */
 type ECDSASignature struct {
@@ -154,12 +155,28 @@ func Create (w http.ResponseWriter, r *http.Request) {
 		/* Check if ID is allowed in ALLOWED_IDs */
 		if _, ok := ALLOWED_IDS[ID]; ok {
 			newBlockChain := data.NewBlockChain()
-			mpt := p1.MerklePatriciaTrie{}
-			mpt.Initial()
-			/* First block does not need to be verified, rest do */
-			mpt.Insert("1", "Origin")
+
+			mpt1 := p1.MerklePatriciaTrie{}
+			mpt1.Initial()
+			mpt1.Insert("1", "Origin")
+
+			mpt2 := p1.MerklePatriciaTrie{}
+			mpt2.Initial()
+			mpt2.Insert("1", "Decoy1")
+
+			mpt3 := p1.MerklePatriciaTrie{}
+			mpt3.Initial()
+			mpt3.Insert("1", "Decoy2")
+
+			mpt4 := p1.MerklePatriciaTrie{}
+			mpt4.Initial()
+			mpt4.Insert("1", "Decoy3")
+
 			hexPubKey := hexutil.Encode(signature_p.PUBLIC_KEY)
-			newBlockChain.GenBlock(mpt, hexPubKey)
+			newBlockChain.GenBlock(mpt1, hexPubKey)
+			newBlockChain.GenBlock(mpt2, hexPubKey)
+			newBlockChain.GenBlock(mpt3, hexPubKey)
+			newBlockChain.GenBlock(mpt4, hexPubKey)
 			/* Set Global variable SBC to be this new blockchain */
 			SBC = newBlockChain
 			/* Generate Multiple Blocks Initially */
@@ -318,6 +335,7 @@ func Canonical(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strconv.Itoa(i + 1))
 		for z = 0; z < len(canonicalChains[i].blocks); z++ {
 			output = fmt.Sprintf("%+v", canonicalChains[i].blocks[z])
+			output += "\n"
 			fmt.Fprintln(w, output)
 		}
 	}
@@ -335,6 +353,7 @@ func (canonicalChain *CanonicalChain) writeInfoToCanonicalChain(block p2.Block) 
 		chainBlock.hash = block.Header.Hash
 		chainBlock.parentHash = block.Header.ParentHash
 		chainBlock.size = block.Header.Size
+		chainBlock.publicKey = block.Header.PublicKey
 		canonicalChain.blocks = append(canonicalChain.blocks, chainBlock)
 		return
 	}
@@ -344,6 +363,7 @@ func (canonicalChain *CanonicalChain) writeInfoToCanonicalChain(block p2.Block) 
 	chainBlock.hash = block.Header.Hash
 	chainBlock.parentHash = block.Header.ParentHash
 	chainBlock.size = block.Header.Size
+	chainBlock.publicKey = block.Header.PublicKey
 	canonicalChain.blocks = append(canonicalChain.blocks, chainBlock)
 	parentBlock,_ := SBC.GetParentBlock(block)
 	canonicalChain.writeInfoToCanonicalChain(parentBlock)
