@@ -26,12 +26,39 @@ Success Criteria:
 * Voting nodes can submit anonymous votes to the blockchain (Ring Signature successfully implemented)
 * Votes can be verified on the blockchain (but identities of the submitter remain anonymous)
 
+## Final Timeline
+
+Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger) :white_check_mark:
+
+Week 1b: Provide voting user interface and downloadable ballet :white_check_mark:
+
+Week 2a: Implement signed data transactions, public and private keys :white_check_mark:
+
+Week 2b: Validate digital signature :white_check_mark:
+
+Week 4a: Implement solution to blockchain forking. Count votes on all chains so forks don't impact final count. :white_check_mark:
+
+Week 4b: Verify integrity of the votes and count the votes :white_check_mark:
+
+Week 4b: Read in the ballot from JSON file :white_check_mark:
+
+Week 4c: Conceal signature/public key of voter with ring signature algorithm :hourglass_flowing_sand:
+
+Week 4c: Validate ring signature  :hourglass_flowing_sand:
+
+Final Due Date/Demo - 5/16/19 at 2:30 p.m.
+
+### Final Review
+Did not successfully implement ring signature by deadline. The bug for verifying the signature took longer than expected to resolve 
+(ended up using the go-ethereum library instead of the ECDSA library, since it wasn't clear how the receiving node would validate the signature.) 
+
+
+
 ## Midpoint Review
 
 The original timeline did not allocate time to implement public/private keys or digital signatures.
 Ring signature functionality is dependent on having some type of existing digital signature infrastructure in place.
 I've moved back "Implement solution to blockchain forking" but was still able to start on the ring signature on schedule.
-
 
 
 ### Updated Timeline:

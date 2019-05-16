@@ -456,7 +456,6 @@ func AskForBlock(height int32, hash string) {
 
 /* Send to all the peers. Will probably want to send a post request to their ReceiveHeartBeat */
 func ForwardHeartBeat(heartBeatData data.HeartBeatData) {
-	fmt.Println("Forward Heart Beat")
 	/* Need to rebalance before send. Makes the most sense to do it here */
 	Peers.Rebalance()
 	/* Get the peerMap */
@@ -537,7 +536,6 @@ func GenerateVotingMpt() p1.MerklePatriciaTrie {
 	}
 	fmt.Println("MPT")
 	vote, _ := mpt.Get("1")
-	fmt.Println(vote)
 	return mpt
 }
 
