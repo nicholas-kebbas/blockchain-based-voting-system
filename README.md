@@ -221,6 +221,25 @@ We use the ECDSA golang library to generate our Public and Private keys.
 
 </addr>
 
+## Original Timeline
+
+Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger)
+
+Week 1b: Provide voting user interface and downloadable ballet
+
+Week 2a: Implement solution to blockchain forking. (Implement Round Robin Consensus, Delegated Proof of Stake, or something similar)
+
+Week 2b: Start work on encrypting voting results using ring signature algorithm
+
+CHECKPOINT - 5/1/19
+
+Week 3a: Complete ring signature algorithm
+
+Week 3b: Verify on the blockchain by the key image
+
+Week 4: Verify integrity of the votes and count the votes
+
+
 ## Resources
 
 ### Permissioned Blockchain
