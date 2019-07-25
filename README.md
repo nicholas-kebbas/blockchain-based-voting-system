@@ -1,4 +1,4 @@
-# Project 5 
+
 
 ## A Blockchain Based Voting System
 ### Why: 
@@ -26,64 +26,6 @@ Success Criteria:
 * Voting nodes can submit anonymous votes to the blockchain (Ring Signature successfully implemented)
 * Votes can be verified on the blockchain (but identities of the submitter remain anonymous)
 
-## Final Timeline
-
-Link to Demo: https://www.youtube.com/watch?v=jlRtCUJsp9k
-
-Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger) :white_check_mark:
-
-Week 1b: Provide voting user interface and downloadable ballet :white_check_mark:
-
-Week 2a: Implement signed data transactions, public and private keys :white_check_mark:
-
-Week 2b: Validate digital signature :white_check_mark:
-
-Week 4a: Implement solution to blockchain forking. Count votes on all chains so forks don't impact final count. :white_check_mark:
-
-Week 4b: Verify integrity of the votes and count the votes :white_check_mark:
-
-Week 4b: Read in the ballot from JSON file :white_check_mark:
-
-Week 4c: Conceal signature/public key of voter with ring signature algorithm :hourglass_flowing_sand:
-
-Week 4c: Validate ring signature  :hourglass_flowing_sand:
-
-Final Due Date/Demo - 5/16/19 at 2:30 p.m.
-
-### Final Review
-Did not successfully implement ring signature by deadline. The bug for verifying the signature took longer than expected to resolve 
-(ended up using the go-ethereum library instead of the ECDSA library, since it wasn't clear how the receiving node would validate the signature.) 
-
-
-
-## Midpoint Review
-
-The original timeline did not allocate time to implement public/private keys or digital signatures.
-Ring signature functionality is dependent on having some type of existing digital signature infrastructure in place.
-I've moved back "Implement solution to blockchain forking" but was still able to start on the ring signature on schedule.
-
-
-### Updated Timeline:
-
-Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger) :white_check_mark:
-
-Week 1b: Provide voting user interface and downloadable ballet :white_check_mark:
-
-Week 2a: Implement signed data transactions, public and private keys :white_check_mark:
-
-Week 2b: Verify on the blockchain by digital signature :hourglass_flowing_sand: (Currently a bug in verification)
-
-CHECKPOINT - 5/1/19
-
-Week 3a: Start work on encrypting voting results using ring signature algorithm :hourglass_flowing_sand:
-
-Week 3b: Validate ring signature results  :x:
-
-Week 4a: Implement solution to blockchain forking. (Implement Round Robin Consensus, Delegated Proof of Stake, etc. or use a Canononical Tree)  :x:
-
-Week 4b: Verify integrity of the votes and count the votes  :x:
-Final Due Date/Demo - 5/16/19 at 2:30 p.m.
-
 ### Permissioned Blockchain
 <addr>
     
@@ -100,7 +42,7 @@ Final Due Date/Demo - 5/16/19 at 2:30 p.m.
 </addr>
 
 ### User Interface for Voting
-Added a CLI so that the voter can submit their vote. The block creation blocks while the user votes.
+CLI so that the voter can submit their vote. The block creation blocks while the user votes.
 <addr>
 
     func GenerateVotingMpt() p1.MerklePatriciaTrie {
@@ -222,24 +164,6 @@ We use the ECDSA golang library to generate our Public and Private keys.
     }
 
 </addr>
-
-## Original Timeline
-
-Week 1a: Grant write privileges to blockchain from only certain nodes (Permissioned Ledger)
-
-Week 1b: Provide voting user interface and downloadable ballet
-
-Week 2a: Implement solution to blockchain forking. (Implement Round Robin Consensus, Delegated Proof of Stake, or something similar)
-
-Week 2b: Start work on encrypting voting results using ring signature algorithm
-
-CHECKPOINT - 5/1/19
-
-Week 3a: Complete ring signature algorithm
-
-Week 3b: Verify on the blockchain by the key image
-
-Week 4: Verify integrity of the votes and count the votes
 
 
 ## Resources
